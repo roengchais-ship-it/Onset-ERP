@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onset ERP v4.9.33 - Modern UI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+  <style>
+    /* --- MODERN THEME VARIABLES --- */
+    :root {
+      /* Palette */
+      --primary: #4f46e5;       /* Indigo 600 */
+      --primary-hover: #4338ca; /* Indigo 700 */
+      --primary-light: #eef2ff; /* Indigo 50 */
+      --secondary: #64748b;     /* Slate 500 */
+      
+      --bg-body: #f1f5f9;       /* Slate 100 */
+      --bg-sidebar: #1e293b;    /* Slate 800 */
+      --surface: #ffffff;
+      
+      --text-main: #0f172a;     /* Slate 900 */
+      --text-muted: #64748b;    /* Slate 500 */
+      --text-light: #94a3b8;    /* Slate 400 */
+      
+      --border: #e2e8f0;        /* Slate 200 */
+      
+      /* Status Colors */
+      --success-bg: #dcfce7; --success-text: #166534;
+      --warning-bg: #fef3c7; --warning-text: #92400e;
+      --danger-bg: #fee2e2;  --danger-text: #991b1b;
+      --info-bg: #e0f2fe;    --info-text: #075985;
+
+      /* Dimensions & Effects */
+      --sidebar-width: 260px;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; outline: none; }
+    
+    body { 
+      font-family: 'Sarabun', sans-serif; 
+      background: var(--bg-body); 
+      color: var(--text-main); 
+      margin: 0; 
+      display: flex; 
+      height: 100vh; 
+      overflow: hidden; 
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* --- SCROLLBAR --- */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* --- SIDEBAR --- */
+    .sidebar { 
+      width: var(--sidebar-width); 
+      background: var(--bg-sidebar); 
+      color: white; 
+      display: flex; 
+      flex-direction: column; 
+      padding: 24px 16px; 
+      flex-shrink: 0; 
+      z-index: 20; 
+      box-shadow: 4px 0 24px rgba(0,0,0,0.05);
+    }
+    
+    .brand { 
+      padding: 0 12px 32px; 
+      font-size: 22px; 
+      font-weight: 700; 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      color: white; 
+      letter-spacing: 0.5px;
+    }
+    .brand .material-icons-round { color: #818cf8; }
+
+    .nav-item { 
+      padding: 12px 16px; 
+      margin-bottom: 4px;
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      gap: 14px; 
+      color: #94a3b8; 
+      border-radius: var(--radius-md);
+      transition: var(--transition); 
+      font-weight: 500;
+    }
+    
+    .nav-item:hover { 
+      background: rgba(255,255,255,0.05); 
+      color: #f1f5f9; 
+    }
+    
+    .nav-item.active { 
+      background: var(--primary); 
+      color: white; 
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    .nav-item.active .material-icons-round { color: white; }
+
+    /* --- MAIN CONTENT --- */
+    .main-content { 
+      flex: 1; 
+      overflow-y: auto; 
+      padding: 32px 40px; 
+      position: relative; 
+    }
+    
+    .page-title { 
+      font-size: 26px; 
+      font-weight: 700; 
+      margin-bottom: 32px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      color: var(--text-main);
+    }
+
+    /* --- COMPONENTS --- */
+    .card { 
+      background: var(--surface); 
+      border-radius: var(--radius-lg); 
+      box-shadow: var(--shadow-sm); 
+      padding: 24px; 
+      border: 1px solid var(--border); 
+      margin-bottom: 24px; 
+      transition: var(--transition);
+    }
+    .card:hover { box-shadow: var(--shadow-md); }
+    
+    .card h3 { 
+      margin-top: 0; 
+      margin-bottom: 20px; 
+      font-size: 18px; 
+      font-weight: 600; 
+      color: var(--text-main);
+    }
+
+    /* Stats Grid */
+    .stats-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+      gap: 24px; 
+      margin-bottom: 32px; 
+    }
+    
+    .stat-card { 
+      background: var(--surface); 
+      padding: 24px; 
+      border-radius: var(--radius-lg); 
+      border: 1px solid var(--border); 
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    .stat-label { 
+      font-size: 14px; 
+      font-weight: 500;
+      color: var(--text-muted); 
+      margin-bottom: 8px; 
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .stat-value { 
+      font-size: 32px; 
+      font-weight: 700; 
+      color: var(--text-main); 
+      line-height: 1.2;
+    }
+
+    /* --- FORM ELEMENTS --- */
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-main);
+      background: #fff;
+      transition: var(--transition);
+      margin-bottom: 10px;
+    }
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+
+    /* Input Group for Create Order */
+    .input-group { display: flex; gap: 0; }
+    .input-group .form-control:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-bottom: 0;}
+    .input-group .form-control:last-child { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-bottom: 0; border-left: none; width: auto;}
+
+    /* Item List Row */
+    .item-list-row {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr 0.8fr 1fr auto;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: start;
+    }
+    .item-list-row .form-control { margin-bottom: 0; }
+
+    /* --- TABLE --- */
+    table { 
+      width: 100%; 
+      border-collapse: separate; 
+      border-spacing: 0; 
+      width: 100%;
+    }
+    
+    th { 
+      text-align: left; 
+      padding: 14px 20px; 
+      background: #f8fafc; 
+      color: var(--text-muted); 
+      font-size: 12px; 
+      font-weight: 600; 
+      text-transform: uppercase; 
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border); 
+    }
+    th:first-child { border-top-left-radius: var(--radius-md); }
+    th:last-child { border-top-right-radius: var(--radius-md); }
+
+    td { 
+      padding: 16px 20px; 
+      border-bottom: 1px solid var(--border); 
+      font-size: 14px; 
+      vertical-align: middle; 
+      color: var(--text-main);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+    
+    .col-checkbox { width: 40px; text-align: center; }
+
+    /* --- BUTTONS --- */
+    .btn { 
+      padding: 10px 18px; 
+      border-radius: var(--radius-sm); 
+      border: 1px solid transparent; 
+      font-weight: 600; 
+      cursor: pointer; 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center;
+      gap: 8px; 
+      transition: var(--transition); 
+      font-family: inherit; 
+      font-size: 14px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    
+    .btn:active { transform: translateY(1px); }
+
+    .btn-primary { 
+      background: var(--primary); 
+      color: white; 
+      box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+    }
+    .btn-primary:hover { background: var(--primary-hover); box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3); }
+
+    .btn-outline { 
+      background: white; 
+      border: 1px solid var(--border); 
+      color: var(--text-main); 
+    }
+    .btn-outline:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+    .btn-danger { background: var(--danger-bg); color: var(--danger-text); border-color: transparent; }
+    .btn-danger:hover { background: #fecaca; }
+
+    .btn-success { background: var(--success-bg); color: var(--success-text); }
+    .btn-warning { background: var(--warning-bg); color: var(--warning-text); }
+    
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 4px; }
+    .btn-lg { padding: 12px 24px; font-size: 16px; border-radius: 8px; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(1); }
+
+    /* --- BADGES --- */
+    .badge { 
+      padding: 4px 10px; 
+      border-radius: 99px; 
+      font-size: 11px; 
+      font-weight: 600; 
+      text-transform: uppercase; 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 4px; 
+      letter-spacing: 0.5px;
+    }
+    .badge-New { background: var(--info-bg); color: var(--info-text); }
+    .badge-Paid { background: var(--success-bg); color: var(--success-text); }
+    .badge-Shipped { background: var(--warning-bg); color: var(--warning-text); }
+
+    /* --- BULK ACTION BAR (FIXED CSS) --- */
+    .bulk-action-bar {
+      display: flex; align-items: center; justify-content: space-between; 
+      background: var(--primary-light); color: var(--primary);
+      padding: 0 20px; border-radius: var(--radius-md); margin-bottom: 0; 
+      border: 1px solid transparent;
+      opacity: 0; pointer-events: none; transition: all 0.2s ease-in-out; 
+      height: 0; overflow: hidden; transform: translateY(-10px);
+      position: relative; /* Fix z-index context */
+      z-index: 900; /* High z-index to stay above table headers */
+    }
+    .bulk-action-bar.active { 
+      opacity: 1; pointer-events: all; height: 60px; padding: 0 20px; 
+      margin-bottom: 20px; transform: translateY(0);
+      overflow: visible; /* Allow dropdown to overflow */
+      border-color: rgba(79, 70, 229, 0.2);
+    }
+
+    /* --- DROPDOWN (UPDATED FOR CLICK TOGGLE) --- */
+    .dropdown { position: relative; display: inline-block; }
+    .dropbtn {
+      background-color: white; color: var(--primary); 
+      padding: 8px 16px; font-size: 14px; border: 1px solid rgba(79, 70, 229, 0.2); 
+      cursor: pointer; border-radius: var(--radius-sm);
+      display: flex; align-items: center; gap: 6px; font-weight: 600; font-family: inherit;
+      transition: var(--transition);
+    }
+    .dropbtn:hover { background: #fff; box-shadow: var(--shadow-sm); }
+    
+    .dropdown-content {
+      display: none; position: absolute; right: 0; top: 120%; 
+      background-color: white; min-width: 260px;
+      box-shadow: var(--shadow-lg); z-index: 1000; 
+      border-radius: var(--radius-md); border: 1px solid var(--border);
+      padding: 6px; animation: slideDown 0.2s ease-out;
+    }
+    /* Removed :hover rule, using .show class instead */
+    .dropdown-content.show { display: block; }
+
+    @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+    
+    .dropdown-content a {
+      color: var(--text-main); padding: 10px 12px; 
+      text-decoration: none; display: flex; align-items: center; gap: 10px; 
+      font-size: 14px; cursor: pointer; border-radius: 6px;
+    }
+    .dropdown-content a:hover { background-color: #f8fafc; color: var(--primary); }
+    /* .dropdown:hover .dropdown-content { display: block; } <-- Removed */
+
+    /* --- UTILS --- */
+    .hidden { display: none !important; }
+    
+    #sync-toast { 
+      position: fixed; bottom: 30px; right: 30px; 
+      background: #1e293b; color: white; 
+      padding: 14px 24px; border-radius: var(--radius-md); 
+      display: flex; align-items: center; gap: 12px; 
+      transform: translateY(100px); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+      z-index: 2000; box-shadow: var(--shadow-lg); font-weight: 500;
+    }
+    #sync-toast.show { transform: translateY(0); }
+    
+    /* --- PACKING SYSTEM (REDESIGNED) --- */
+    .packing-layout { display: grid; grid-template-columns: 320px 1fr; gap: 24px; height: calc(100vh - 120px); }
+    .pack-list-col { background: white; border-radius: var(--radius-lg); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+    .pack-list-header { padding: 16px; border-bottom: 1px solid var(--border); background: #f8fafc; font-weight: 600; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
+    .pack-list { overflow-y: auto; flex: 1; padding: 12px; }
+    
+    .pack-order-card { 
+        padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 10px; cursor: pointer; transition: var(--transition); background: white;
+    }
+    .pack-order-card:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+    .pack-order-card.active { border-color: var(--primary); background: var(--primary-light); border-left: 4px solid var(--primary); }
+    
+    .pack-workspace { background: white; border-radius: var(--radius-lg); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .pack-ws-header { padding: 24px; border-bottom: 1px solid var(--border); background: white; }
+    .pack-progress-container { height: 8px; background: #e2e8f0; border-radius: 99px; margin-top: 15px; overflow: hidden; }
+    .pack-progress-bar { height: 100%; background: var(--success-bg); width: 0%; transition: width 0.3s ease; background-color: var(--success-text); }
+    
+    .pack-ws-body { flex: 1; overflow-y: auto; padding: 24px; background: #f8fafc; }
+    .pack-input-container { margin-bottom: 24px; position: sticky; top: 0; z-index: 10; }
+    .pack-scan-input { 
+        width: 100%; font-size: 24px; padding: 16px; text-align: center; border: 2px solid var(--primary); 
+        border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15); outline: none; transition: var(--transition);
+    }
+    .pack-scan-input:focus { box-shadow: 0 4px 20px rgba(79, 70, 229, 0.25); border-color: var(--primary-hover); }
+    .pack-scan-input.error { border-color: var(--danger-text); animation: shake 0.3s; }
+    
+    .pack-item-list { display: grid; gap: 12px; }
+    .pack-item-row { 
+        display: flex; align-items: center; justify-content: space-between; padding: 16px; 
+        background: white; border: 1px solid var(--border); border-radius: var(--radius-md); transition: var(--transition); 
+    }
+    .pack-item-row.completed { border-color: var(--success-text); background: #f0fdf4; }
+    .pack-item-row.completed .material-icons-round { color: var(--success-text); }
+    
+    .pack-ws-footer { padding: 20px 24px; background: white; border-top: 1px solid var(--border); text-align: right; }
+
+    @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
+
+    /* --- MODAL --- */
+    .modal-overlay { 
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+      background: rgba(15, 23, 42, 0.6); 
+      display: flex; justify-content: center; align-items: center; 
+      z-index: 2000; 
+      backdrop-filter: blur(4px); 
+      opacity: 0; animation: fadeIn 0.2s forwards;
+    }
+    @keyframes fadeIn { to { opacity: 1; } }
+    
+    .modal-content { 
+      width: 95%; max-width: 800px; padding: 0; overflow: hidden; 
+      border-radius: 16px; border: none; background: #ffffff !important;
+      box-shadow: var(--shadow-lg); 
+      transform: scale(0.95); animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes zoomIn { to { transform: scale(1); } }
+    
+    .modal-header { padding: 24px 32px; background: white; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { padding: 32px; background: #ffffff; max-height: 70vh; overflow-y: auto; }
+    .modal-footer { padding: 20px 32px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
+
+    /* --- PRINT --- */
+    @media print {
+      @page { size: A4 portrait; margin: 0; }
+      body, html { margin: 0; padding: 0; background: white; width: 100%; height: auto !important; -webkit-print-color-adjust: exact; overflow: visible; }
+      .sidebar, .btn, .page-title, .nav-item, #sync-toast, [id^="view-"], .modal-overlay, .bulk-action-bar, .dropdown { display: none !important; }
+      #printable-area { display: block !important; width: 100%; position: static; }
+      
+      .print-page { 
+        page-break-after: always; 
+        position: relative; 
+        margin: 0; 
+        padding: 0; 
+        min-height: 297mm;
+      }
+      
+      .print-withdrawal-item { 
+        page-break-inside: avoid; 
+        border-bottom: 2px dashed #999; 
+        padding-bottom: 5mm; 
+        margin-bottom: 0;
+        min-height: 148.5mm; 
+        display: flex;
+        flex-direction: column;
+      }
+      .print-withdrawal-item:nth-child(2n) {
+        page-break-after: always;
+        border-bottom: none;
+      }
+      .print-withdrawal-item:last-child {
+        border-bottom: none;
+        page-break-after: auto;
+      }
+    }
+    #printable-area { display: none; background: white; color: black; }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="brand">
+        <span class="material-icons-round" style="font-size: 28px;">inventory_2</span> 
+        ONSET ERP
+    </div>
+    <div class="nav-item active" onclick="router('dashboard', this)"><span class="material-icons-round">dashboard</span> Dashboard</div>
+    <div class="nav-item" onclick="router('orders', this)"><span class="material-icons-round">shopping_bag</span> รายการออเดอร์</div>
+    <div class="nav-item" onclick="router('history', this)"><span class="material-icons-round">history</span> ประวัติ Sheet</div>
+    <div class="nav-item" onclick="router('packing', this)"><span class="material-icons-round">inventory</span> แพ็คสินค้า</div>
+    <div class="nav-item" onclick="router('products', this)"><span class="material-icons-round">category</span> คลังสินค้า</div>
+    <div class="nav-item" onclick="router('customers', this)"><span class="material-icons-round">people</span> ลูกค้า</div>
+    <div class="nav-item" onclick="router('create', this)" style="margin-top:auto; background:rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); justify-content: center;"><span class="material-icons-round">add_circle</span> สร้างออเดอร์</div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    
+    <!-- DASHBOARD -->
+    <div id="view-dashboard">
+      <div class="page-title">
+        Dashboard ภาพรวม
+        <div style="font-size: 14px; color: var(--text-muted); font-weight: normal; display: flex; align-items: center; gap: 5px;">
+             <span class="material-icons-round" style="font-size: 16px;">today</span> ข้อมูลวันนี้
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <div class="stat-label">ยอดขายรวม</div>
+                    <div class="stat-value" id="stat-sales" style="color: var(--primary);">฿0</div>
+                </div>
+                <span class="material-icons-round" style="font-size: 40px; color: var(--primary-light); background: var(--primary); border-radius: 50%; padding: 8px; color: white;">payments</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <div class="stat-label">ออเดอร์ทั้งหมด</div>
+                    <div class="stat-value" id="stat-total">0</div>
+                </div>
+                <span class="material-icons-round" style="font-size: 40px; color: var(--info-text); background: var(--info-bg); border-radius: 50%; padding: 8px;">shopping_cart</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <div class="stat-label">รอจัดส่ง</div>
+                    <div class="stat-value" style="color:var(--danger-text)" id="stat-pending">0</div>
+                </div>
+                <span class="material-icons-round" style="font-size: 40px; color: var(--danger-text); background: var(--danger-bg); border-radius: 50%; padding: 8px;">local_shipping</span>
+            </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>ออเดอร์ล่าสุด</h3>
+        <table>
+          <thead><tr><th>Order ID</th><th>ลูกค้า</th><th>รายการสินค้า</th><th>ยอดเงิน</th><th>สถานะ</th></tr></thead>
+          <tbody id="recent-orders-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDER LIST -->
+    <div id="view-orders" class="hidden">
+      <div class="page-title">รายการออเดอร์ <button class="btn btn-primary" onclick="router('create')"><span class="material-icons-round">add</span> สร้างใหม่</button></div>
+      <div class="card" style="overflow: visible;">
+        <div id="bulk-bar" class="bulk-action-bar">
+          <div style="font-weight: 600; display: flex; align-items: center; gap: 10px;">
+            <span class="material-icons-round">check_circle</span> เลือกแล้ว <span id="selected-count" style="font-size: 18px;">0</span> รายการ
+          </div>
+          <div style="display:flex; gap:10px;">
+             <div class="dropdown">
+                <button class="dropbtn" onclick="toggleDropdown('status-dd', event)" style="color: var(--text-main); border-color: var(--border);">
+                    <span class="material-icons-round">edit_note</span> เปลี่ยนสถานะ <span class="material-icons-round">expand_more</span>
+                </button>
+                <div id="status-dd" class="dropdown-content">
+                    <a onclick="bulkUpdateStatus('Paid')"><span class="badge badge-Paid" style="width:10px; height:10px; padding:0; display:inline-block; margin-right:5px;"></span> Paid (พร้อมส่ง/รอแพ็ค)</a>
+                    <a onclick="bulkUpdateStatus('Shipped')"><span class="badge badge-Shipped" style="width:10px; height:10px; padding:0; display:inline-block; margin-right:5px;"></span> Shipped (จัดส่งแล้ว)</a>
+                    <a onclick="bulkUpdateStatus('New')"><span class="badge badge-New" style="width:10px; height:10px; padding:0; display:inline-block; margin-right:5px;"></span> New (รอชำระ)</a>
+                </div>
+             </div>
+             <div class="dropdown">
+                <button class="dropbtn" onclick="toggleDropdown('print-dd', event)"><span class="material-icons-round">print</span> พิมพ์เอกสาร <span class="material-icons-round">expand_more</span></button>
+                <div id="print-dd" class="dropdown-content">
+                  <a onclick="bulkPrint('quotation')"><span class="material-icons-round">description</span> ใบเสนอราคา (Quotation)</a>
+                  <a onclick="bulkPrint('invoice')"><span class="material-icons-round">receipt</span> ใบเสร็จ/ใบกำกับ (Invoice)</a>
+                  <a onclick="bulkPrint('withdrawal')"><span class="material-icons-round">list_alt</span> ใบเบิกแยกรายการ (Individual Slips)</a>
+                  <a onclick="bulkPrint('combined_withdrawal')"><span class="material-icons-round">inventory_2</span> ใบเบิกแบบรวมรายการ (Summary)</a>
+                </div>
+             </div>
+          </div>
+        </div>
+        <div style="display:flex; gap:12px; margin-bottom:20px;">
+          <div style="position: relative; flex: 1; max-width: 400px;">
+            <span class="material-icons-round" style="position: absolute; left: 12px; top: 10px; color: var(--text-light);">search</span>
+            <input type="text" id="order-search" class="form-control" style="padding-left: 40px; margin-bottom: 0;" placeholder="ค้นหา ID หรือ ชื่อ..." onkeyup="renderOrders()">
+          </div>
+          <select id="order-filter" class="form-control" style="width:200px; margin-bottom: 0;" onchange="renderOrders()">
+            <option value="">ทุกสถานะ</option><option value="New">New</option><option value="Paid">Paid</option><option value="Shipped">Shipped</option>
+          </select>
+        </div>
+        <div style="overflow-x: auto;">
+            <table>
+            <thead>
+                <tr>
+                <th class="col-checkbox"><input type="checkbox" id="check-all" onclick="toggleSelectAll()" style="transform: scale(1.2); cursor: pointer;"></th>
+                <th style="width:120px;">ID</th>
+                <th style="width:100px;">วันที่</th>
+                <th style="width:180px;">ลูกค้า</th>
+                <th>รายการสินค้า</th>
+                <th style="width:120px;">ยอดสุทธิ</th>
+                <th style="width:100px;">สถานะ</th>
+                <th style="width:140px;">จัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="order-list-body"></tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="view-history" class="hidden">
+      <div class="page-title">
+        <div>ประวัติจาก Google Sheets <span id="last-sync-time" style="font-size: 13px; font-weight: normal; color: var(--text-muted); margin-left: 10px; background: #e2e8f0; padding: 4px 10px; border-radius: 20px;"></span></div>
+        <button class="btn btn-outline" onclick="fetchHistory()"><span class="material-icons-round">refresh</span> รีเฟรชข้อมูล</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>วันที่</th><th>เลขที่</th><th>ลูกค้า</th><th>สรุปรายการ</th><th>ยอดเงิน</th><th>สถานะ</th></tr></thead>
+          <tbody id="history-list-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CREATE ORDER -->
+    <div id="view-create" class="hidden">
+      <div class="page-title" id="create-title">สร้างออเดอร์ใหม่</div>
+      <form onsubmit="handleSaveOrder(event)">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom: 24px;">
+          <div class="card" style="margin-bottom: 0;">
+            <h3><span class="material-icons-round" style="vertical-align: middle; color: var(--primary);">person</span> 1. ข้อมูลลูกค้า</h3>
+            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">เบอร์โทรศัพท์ (Auto-fill)</label>
+            <input type="tel" id="in-phone" placeholder="ตัวอย่าง: 0812345678" class="form-control" onchange="autoFillCust()">
+            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">ชื่อลูกค้า</label>
+            <input type="text" id="in-name" placeholder="ชื่อ-นามสกุล" class="form-control" required>
+            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">ที่อยู่จัดส่ง</label>
+            <textarea id="in-address" placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์" class="form-control" rows="3" required></textarea>
+          </div>
+          <div class="card" style="margin-bottom: 0;">
+            <h3><span class="material-icons-round" style="vertical-align: middle; color: var(--primary);">settings</span> 2. รายละเอียดการขาย</h3>
+            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">ช่องทางการขาย</label>
+            <select id="in-channel" class="form-control"><option>Facebook</option><option>Line</option><option>Tiktok</option><option>Shopee</option></select>
+            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">วิธีการชำระเงิน</label>
+            <select id="in-payment" class="form-control"><option>Transfer</option><option>COD</option></select>
+            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">สถานะเริ่มต้น</label>
+            <select id="in-status" class="form-control"><option value="New">New</option><option value="Paid">Paid</option></select>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="display:flex; justify-content:space-between; align-items:center;">
+            <span><span class="material-icons-round" style="vertical-align: middle; color: var(--primary);">shopping_cart</span> 3. รายการสินค้า</span>
+            <button type="button" class="btn btn-outline btn-sm" onclick="addFormRow()">+ เพิ่มสินค้า</button>
+          </h3>
+          <div style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; display: grid; grid-template-columns: 2fr 1.5fr 0.8fr 1fr auto; gap: 10px; font-size: 12px; font-weight: 600; color: var(--text-muted);">
+              <div>ชื่อสินค้า</div><div>SKU</div><div>จำนวน</div><div>ราคา/หน่วย</div><div>ลบ</div>
+          </div>
+          <div id="form-items-container"></div>
+          <div style="display: flex; justify-content: flex-end; margin-top:24px; padding-top:24px; border-top:1px solid var(--border);">
+            <div style="width: 300px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--text-muted);">
+                    <span>ยอดรวมสินค้า</span>
+                    <span id="form-subtotal" style="font-weight: 600; color: var(--text-main);">0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <label>ส่วนลด</label>
+                    <div class="input-group" style="width: 150px;">
+                    <input type="number" id="form-discount-input" value="0" class="form-control" style="text-align:right;" onchange="calcTotal()">
+                    <select id="form-discount-type" class="form-control" style="width: 60px; background: #f1f5f9;" onchange="calcTotal()"><option value="THB">฿</option><option value="Percent">%</option></select>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 2px dashed var(--border);">
+                    <span style="font-size: 16px; font-weight: 700;">ยอดสุทธิ</span>
+                    <span style="font-size: 24px; font-weight: 800; color: var(--primary);">฿<span id="form-total">0</span></span>
+                </div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right; margin-bottom:40px; position: sticky; bottom: 20px; z-index: 10;">
+            <div style="background: rgba(255,255,255,0.8); backdrop-filter: blur(8px); padding: 10px; border-radius: 12px; display: inline-block; box-shadow: var(--shadow-lg); border: 1px solid var(--border);">
+                <button type="submit" id="btn-save" class="btn btn-primary btn-lg" style="min-width: 200px;">บันทึกออเดอร์</button>
+            </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- PACKING (REDESIGNED) -->
+    <div id="view-packing" class="hidden">
+      <div class="page-title">ระบบแพ็คสินค้า (Packing Station)</div>
+      <div class="packing-layout">
+        <!-- Sidebar: Queue -->
+        <div class="pack-list-col">
+            <div class="pack-list-header">
+                <span>รอแพ็ค (Paid)</span>
+                <span id="pack-queue-count" class="badge badge-New">0</span>
+            </div>
+            <div class="pack-list" id="pack-pending-list">
+                <!-- Orders will appear here -->
+            </div>
+        </div>
+
+        <!-- Main: Workspace -->
+        <div class="pack-workspace" id="pack-ws">
+            <div id="pack-idle-state" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:var(--text-light);">
+                <span class="material-icons-round" style="font-size: 64px; margin-bottom:16px;">inventory_2</span>
+                <div style="font-size:18px;">เลือกออเดอร์ทางซ้ายเพื่อเริ่มแพ็ค</div>
+            </div>
+
+            <div id="pack-active-state" class="hidden" style="display:flex; flex-direction:column; height:100%;">
+                <div class="pack-ws-header">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <div>
+                            <h2 style="margin:0; font-size:24px;" id="pack-order-id">S-00000</h2>
+                            <div style="color:var(--text-muted);" id="pack-customer-name">Customer Name</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:24px; font-weight:700; color:var(--primary);" id="pack-progress-text">0%</div>
+                        </div>
+                    </div>
+                    <div class="pack-progress-container">
+                        <div class="pack-progress-bar" id="pack-progress-bar"></div>
+                    </div>
+                </div>
+
+                <div class="pack-ws-body">
+                    <div class="pack-input-container">
+                        <input type="text" id="pack-scan" class="pack-scan-input" placeholder="ยิงบาร์โค้ด หรือพิมพ์ SKU แล้วกด Enter..." onkeydown="handlePackScan(event)" autocomplete="off">
+                    </div>
+                    <div id="pack-items-list" class="pack-item-list">
+                        <!-- Items will generate here -->
+                    </div>
+                </div>
+
+                <div class="pack-ws-footer">
+                    <button class="btn btn-outline" onclick="cancelPacking()" style="margin-right:10px;">ยกเลิก</button>
+                    <button id="btn-finish-pack" class="btn btn-success btn-lg" disabled onclick="finishPacking()">
+                        <span class="material-icons-round">check_circle</span> ยืนยันการแพ็ค
+                    </button>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div id="view-products" class="hidden">
+      <div class="page-title">คลังสินค้า <button class="btn btn-primary" onclick="openProductModal()">+ เพิ่มสินค้า</button></div>
+      <div class="card">
+        <div style="margin-bottom: 20px; max-width: 400px; position: relative;">
+            <span class="material-icons-round" style="position: absolute; left: 12px; top: 10px; color: var(--text-light);">search</span>
+            <input type="text" id="prod-search" class="form-control" style="padding-left: 40px; margin-bottom: 0;" placeholder="ค้นหา SKU หรือ ชื่อสินค้า..." onkeyup="renderProducts()">
+        </div>
+        <table>
+          <thead><tr><th>SKU</th><th>ชื่อสินค้า</th><th>ราคา</th><th>จัดการ</th></tr></thead>
+          <tbody id="product-list-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div id="view-customers" class="hidden">
+      <div class="page-title">ฐานข้อมูลลูกค้า</div>
+      <div class="card">
+        <table>
+          <thead><tr><th>ชื่อ</th><th>เบอร์โทร</th><th>ที่อยู่</th><th>จำนวนออเดอร์</th></tr></thead>
+          <tbody id="customer-list-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODALS -->
+  <div id="detail-modal" class="modal-overlay hidden" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div id="detail-dynamic-content"></div>
+    </div>
+  </div>
+
+  <div id="product-modal" class="modal-overlay hidden" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()" style="max-width:400px; padding: 0;">
+      <div class="modal-header">
+          <h3>เพิ่มสินค้าใหม่</h3>
+          <button style="background:none; border:none; cursor:pointer;" onclick="closeModal(null, true)"><span class="material-icons-round">close</span></button>
+      </div>
+      <div class="modal-body" style="padding: 24px;">
+        <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">SKU (รหัสสินค้า)</label>
+        <input type="text" id="p-sku" class="form-control" placeholder="เช่น A001">
+        <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">ชื่อสินค้า</label>
+        <input type="text" id="p-name" class="form-control" placeholder="ชื่อสินค้า">
+        <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">ราคาขาย (บาท)</label>
+        <input type="number" id="p-price" class="form-control" placeholder="0.00">
+      </div>
+      <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeModal(null, true)">ยกเลิก</button>
+          <button class="btn btn-primary" onclick="handleSaveProduct()">บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sync-toast"><span class="material-icons-round" style="color: #38bdf8;">sync</span> <span id="sync-msg">กำลังประมวลผล...</span></div>
+  <div id="printable-area"></div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlJePVfaEZOVo_q0da7_NezBSQC9oZFt1jayvJjQWYjx1uf6xErO54pOsvL0vbKQVt/exec";
+    
+    const COMPANY_INFO = {
+      logo: "https://img5.pic.in.th/file/secure-sv1/onest_logo-3.png", 
+      name: "บริษัท มีเมตตา จำกัด",
+      address: "99/9 หมู่ 5 ตำบลท่าเคย อำเภอสวนผึ้ง จังหวัดราชบุรี 70180",
+      tel: "0936266390",
+      taxId: "0105567127188" 
+    };
+
+    const db = {
+      orders: [],
+      products: [],
+      history: []
+    };
+
+    // --- Safety Check for LocalStorage ---
+    try {
+      const savedOrders = localStorage.getItem('oms_orders');
+      if (savedOrders) {
+        db.orders = JSON.parse(savedOrders);
+        if (!Array.isArray(db.orders)) db.orders = [];
+      }
+    } catch (e) {
+      console.error("Orders corrupted, resetting...", e);
+      localStorage.removeItem('oms_orders');
+    }
+
+    try {
+      const savedProducts = localStorage.getItem('oms_products');
+      if (savedProducts) {
+        db.products = JSON.parse(savedProducts);
+        if (!Array.isArray(db.products)) db.products = [];
+      }
+    } catch (e) {
+      console.error("Products corrupted, resetting...", e);
+      localStorage.removeItem('oms_products');
+    }
+
+    // --- ประกาศตัวแปร Global ---
+    let editingOrderId = null;
+    let packingOrderId = null;
+    let currentPackItems = []; // Store packing state {sku, name, needed, scanned}
+
+    // ============================================
+    // 1. HELPER FUNCTIONS
+    // ============================================
+    function safeDate(dateStr, withTime = false) {
+      if (!dateStr) return "-";
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return withTime ? d.toLocaleString('th-TH') : d.toLocaleDateString('th-TH');
+    }
+
+    function save() {
+      localStorage.setItem('oms_orders', JSON.stringify(db.orders));
+      localStorage.setItem('oms_products', JSON.stringify(db.products));
+    }
+
+    function showToast(msg, dur=3000) {
+      const t = document.getElementById('sync-toast');
+      document.getElementById('sync-msg').innerText = msg;
+      t.classList.add('show');
+      if(dur>0) setTimeout(() => t.classList.remove('show'), dur);
+    }
+
+    function generateNextOrderId() {
+      const allOrders = [...db.orders, ...db.history];
+      let maxNum = 34;
+      allOrders.forEach(o => {
+        const idStr = String(o.id || "");
+        const match = idStr.match(/^S-(\d{1,6})$/i);
+        if (match) {
+          const num = parseInt(match[1]);
+          if (num > maxNum && num < 10000) maxNum = num;
+        }
+      });
+      return "S-" + (maxNum + 1).toString().padStart(5, '0');
+    }
+
+    // ============================================
+    // 2. CORE FUNCTIONS & LOGIC
+    // ============================================
+    
+    // --- Dashboard & Renderers ---
+    function renderDashboard() {
+      const sales = db.orders.reduce((s, o) => s + (Number(o.total)||0), 0);
+      document.getElementById('stat-sales').innerText = `฿${sales.toLocaleString()}`;
+      document.getElementById('stat-total').innerText = db.orders.length;
+      document.getElementById('stat-pending').innerText = db.orders.filter(o => o.status !== 'Shipped').length;
+      document.getElementById('recent-orders-body').innerHTML = db.orders.slice(0, 5).map(o => `<tr><td><b>${o.id}</b></td><td>${o.name}</td><td style="font-size: 11px; color: #444; white-space: pre-wrap;">${o.items_summary || '-'}</td><td>฿${(Number(o.total)||0).toLocaleString()}</td><td><span class="badge badge-${o.status}">${o.status}</span></td></tr>`).join('');
+    }
+
+    function renderOrders() {
+      const search = document.getElementById('order-search').value.toLowerCase();
+      const filter = document.getElementById('order-filter').value;
+      const filtered = db.orders.filter(o => (o.id.toLowerCase().includes(search) || o.name.toLowerCase().includes(search)) && (!filter || o.status === filter));
+      document.getElementById('order-list-body').innerHTML = filtered.map(o => {
+        let displaySummary = o.items_summary || (o.items && Array.isArray(o.items) ? o.items.map((i, idx) => `${idx + 1}. ${i.name} [${i.sku || '-'}] x${i.qty}`).join("\n") : '-');
+        return `<tr><td class="col-checkbox"><input type="checkbox" class="order-checkbox" value="${o.id}" onchange="updateBulk()"></td><td><b>${o.id}</b></td><td>${safeDate(o.date)}</td><td>${o.name}</td><td style="font-size: 12px; color: #444; white-space: pre-wrap;">${displaySummary}</td><td>฿${(Number(o.total)||0).toLocaleString()}</td><td><span class="badge badge-${o.status}">${o.status}</span></td><td><div style="display:flex; gap:5px;"><button class="btn btn-outline btn-sm" onclick="openDetail('${o.id}')">ดู</button><button class="btn btn-warning btn-sm" onclick="editOrder('${o.id}')"><span class="material-icons-round" style="font-size:14px">edit</span></button><button class="btn btn-danger btn-sm" onclick="deleteOrder('${o.id}')"><span class="material-icons-round" style="font-size:14px">delete</span></button></div></td></tr>`;
+      }).join('');
+    }
+
+    function renderProducts() { 
+      document.getElementById('product-list-body').innerHTML = db.products.filter(p => p.name.toLowerCase().includes(document.getElementById('prod-search').value.toLowerCase()) || p.sku.toLowerCase().includes(document.getElementById('prod-search').value.toLowerCase())).map(p => `<tr><td>${p.sku}</td><td>${p.name}</td><td>฿${p.price.toLocaleString()}</td><td><button class="btn btn-danger btn-sm" onclick="delProd('${p.sku}')">ลบ</button></td></tr>`).join(''); 
+    }
+
+    function renderCustomers() { 
+      const list = Array.from(new Set(db.orders.map(o => o.phone))).map(ph => db.orders.find(o => o.phone === ph)); 
+      document.getElementById('customer-list-body').innerHTML = list.map(c => `<tr><td>${c.name}</td><td>${c.phone}</td><td><div style="white-space: pre-line; overflow:hidden; text-overflow:ellipsis; max-width:200px; max-height:60px;">${c.address}</div></td><td>${db.orders.filter(o => o.phone === c.phone).length}</td></tr>`).join(''); 
+    }
+
+    function renderHistory() { 
+      document.getElementById('history-list-body').innerHTML = db.history.map(o => `<tr><td>${safeDate(o.date)}</td><td><b>${o.id}</b></td><td>${o.name}</td><td style="font-size: 12px; color: #444; white-space: pre-wrap;">${o.items_summary || '-'}</td><td>฿${(Number(o.total)||0).toLocaleString()}</td><td><span class="badge badge-${o.status}">${o.status}</span></td></tr>`).join(''); 
+    }
+
+    function updateBulk() { 
+      const sel = document.querySelectorAll('.order-checkbox:checked').length; 
+      const countEl = document.getElementById('selected-count'); 
+      if (countEl) countEl.innerText = sel; 
+      const bar = document.getElementById('bulk-bar'); 
+      if (bar) bar.classList.toggle('active', sel > 0); 
+    }
+
+    function toggleSelectAll() { 
+      const chk = document.getElementById('check-all').checked; 
+      document.querySelectorAll('.order-checkbox').forEach(x => x.checked = chk); 
+      updateBulk(); 
+    }
+
+    // --- Order Operations ---
+    async function deleteOrder(id) {
+        if (!confirm(`ต้องการลบออเดอร์ ${id} ใช่หรือไม่?`)) return;
+        showToast("กำลังลบข้อมูล...", 0);
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete', id: id }) });
+            db.orders = db.orders.filter(o => o.id !== id);
+            save(); renderOrders(); renderDashboard();
+            showToast("ลบออเดอร์เรียบร้อยแล้ว", 2000); fetchHistory();
+        } catch (e) { alert("เกิดข้อผิดพลาดในการลบ: " + e.message); }
+    }
+
+    function editOrder(id) {
+        const order = db.orders.find(o => o.id === id);
+        if (!order) return;
+        editingOrderId = id;
+        document.getElementById('in-phone').value = order.phone || '';
+        document.getElementById('in-name').value = order.name || '';
+        document.getElementById('in-address').value = order.address || '';
+        document.getElementById('in-channel').value = order.channel || 'Facebook';
+        document.getElementById('in-payment').value = order.payment || 'Transfer';
+        document.getElementById('in-status').value = order.status || 'New';
+        document.getElementById('form-discount-input').value = order.discount || 0;
+        document.getElementById('form-discount-type').value = 'THB';
+        const container = document.getElementById('form-items-container');
+        container.innerHTML = '';
+        if (order.items && order.items.length > 0) {
+            order.items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item-list-row';
+                div.innerHTML = `<input type="text" class="form-control item-name" list="prod-list" placeholder="สินค้า" value="${item.name}" onchange="syncRow(this)"><input type="text" class="form-control item-sku" placeholder="SKU" value="${item.sku || ''}"><input type="number" class="form-control item-qty" value="${item.qty}" onchange="calcTotal()"><input type="number" class="form-control item-price" placeholder="ราคา" value="${item.price}" onchange="calcTotal()"><button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); calcTotal()">✕</button><datalist id="prod-list">${db.products.map(p => `<option value="${p.name}">${p.sku}</option>`).join('')}</datalist>`;
+                container.appendChild(div);
+            });
+        } else { addFormRow(); }
+        calcTotal();
+        document.getElementById('create-title').innerText = `แก้ไขออเดอร์ ${id}`;
+        document.getElementById('btn-save').innerText = "บันทึกการแก้ไข (Update)";
+        document.getElementById('btn-save').className = "btn btn-warning btn-lg";
+        router('create');
+    }
+
+    async function handleSaveOrder(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-save');
+      btn.disabled = true; btn.innerText = "กำลังบันทึก...";
+      const subtotal = parseFloat(document.getElementById('form-subtotal').innerText.replace(/,/g, ''));
+      const total = parseFloat(document.getElementById('form-total').innerText.replace(/,/g, ''));
+      showToast("กำลังบันทึก...", 0);
+      const items = [];
+      document.querySelectorAll('.item-list-row').forEach(row => {
+        const name = row.querySelector('.item-name').value;
+        if(name) items.push({ name, sku: row.querySelector('.item-sku').value || '-', qty: parseFloat(row.querySelector('.item-qty').value) || 1, price: parseFloat(row.querySelector('.item-price').value) || 0 });
+      });
+      if (items.length === 0) { alert("กรุณาเพิ่มรายการสินค้า"); btn.disabled = false; btn.innerText = "บันทึกออเดอร์"; return; }
+      const orderId = editingOrderId ? editingOrderId : generateNextOrderId();
+      const baseData = { action: editingOrderId ? 'update' : 'create', id: orderId, date: new Date().toISOString(), name: document.getElementById('in-name').value, phone: document.getElementById('in-phone').value, address: document.getElementById('in-address').value, channel: document.getElementById('in-channel').value, payment: document.getElementById('in-payment').value, status: document.getElementById('in-status').value, subtotal: subtotal, discount: subtotal - total, total: total, items: items };
+      try {
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(baseData) });
+        const orderForLocal = { ...baseData, items_summary: items.map((i, idx) => `${idx + 1}. ${i.name} [${i.sku}] x${i.qty}`).join("\n") };
+        if (editingOrderId) {
+            const idx = db.orders.findIndex(o => o.id === editingOrderId);
+            if (idx !== -1) db.orders[idx] = orderForLocal;
+        } else { db.orders.unshift(orderForLocal); }
+        save(); editingOrderId = null; router('orders');
+        showToast("บันทึกเรียบร้อย", 2000); setTimeout(fetchHistory, 1000);
+      } catch(e) { save(); router('orders'); } finally { btn.disabled = false; btn.innerText = "บันทึกออเดอร์"; }
+    }
+
+    // --- Form Helpers ---
+    function addFormRow() {
+      const div = document.createElement('div');
+      div.className = 'item-list-row';
+      div.innerHTML = `<input type="text" class="form-control item-name" list="prod-list" placeholder="สินค้า" onchange="syncRow(this)"><input type="text" class="form-control item-sku" placeholder="SKU"><input type="number" class="form-control item-qty" value="1" onchange="calcTotal()"><input type="number" class="form-control item-price" placeholder="ราคา" onchange="calcTotal()"><button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); calcTotal()">✕</button><datalist id="prod-list">${db.products.map(p => `<option value="${p.name}">${p.sku}</option>`).join('')}</datalist>`;
+      document.getElementById('form-items-container').appendChild(div);
+    }
+
+    function syncRow(el) {
+      const p = db.products.find(x => x.name === el.value);
+      if(p) { const row = el.parentElement; row.querySelector('.item-sku').value = p.sku; row.querySelector('.item-price').value = p.price; calcTotal(); }
+    }
+
+    function calcTotal() {
+      let subtotal = 0;
+      document.querySelectorAll('.item-list-row').forEach(row => { subtotal += (parseFloat(row.querySelector('.item-qty').value) || 0) * (parseFloat(row.querySelector('.item-price').value) || 0); });
+      const discInput = parseFloat(document.getElementById('form-discount-input').value) || 0;
+      const total = subtotal - (document.getElementById('form-discount-type').value === 'Percent' ? subtotal * (discInput / 100) : discInput);
+      document.getElementById('form-subtotal').innerText = subtotal.toLocaleString();
+      document.getElementById('form-total').innerText = total.toLocaleString();
+    }
+
+    function autoFillCust() { 
+      const ph = document.getElementById('in-phone').value; 
+      const found = db.orders.find(o => o.phone === ph); 
+      if(found) { 
+        document.getElementById('in-name').value = found.name; 
+        document.getElementById('in-address').value = found.address; 
+        showToast("ดึงข้อมูลลูกค้าเดิมแล้ว"); 
+      } 
+    }
+
+    // --- Sync ---
+    async function fetchHistory(isAuto = false) {
+      if(!isAuto) showToast("กำลังดึงข้อมูลล่าสุดจาก Sheet...", 0);
+      try {
+        const res = await fetch(SCRIPT_URL + "?action=getHistory");
+        const data = await res.json();
+        db.history = Array.isArray(data) ? data.filter(x => x.id && x.id !== 'id') : [];
+        const syncEl = document.getElementById('last-sync-time');
+        if(syncEl) syncEl.innerText = `อัปเดตเมื่อ: ${new Date().toLocaleTimeString()}`;
+        renderHistory();
+        if(!isAuto) showToast("อัปเดตข้อมูลแล้ว", 2000);
+      } catch(e) { if(!isAuto) showToast("ไม่สามารถดึงข้อมูลได้", 3000); }
+    }
+
+    // --- Modals & Printing ---
+    function openDetail(id) {
+        const order = db.orders.find(o => o.id === id);
+        if(!order) return;
+        document.getElementById('detail-dynamic-content').innerHTML = `
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:12px;"><span class="material-icons-round" style="color:var(--primary); font-size:32px;">receipt_long</span><div><h2 style="margin:0; font-size:20px;">ออเดอร์ ${order.id}</h2><div style="font-size:12px; color:var(--text-muted);">${safeDate(order.date, true)}</div></div></div>
+                <span class="badge badge-${order.status}" style="padding: 6px 12px; font-size:12px;"><span class="material-icons-round" style="font-size:14px;">fiber_manual_record</span> ${order.status}</span>
+            </div>
+            <div class="modal-body">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px;">
+                    <div style="background:#f8fafc; padding:16px; border-radius:12px; border:1px solid #e2e8f0;"><div style="font-weight:700; color:var(--primary); font-size:13px; margin-bottom:8px; display:flex; align-items:center; gap:6px;"><span class="material-icons-round" style="font-size:18px;">person</span> ข้อมูลลูกค้า</div><div style="font-weight:600; font-size:15px; margin-bottom:2px;">${order.name}</div><div style="font-size:13px; color:#4a5568; margin-bottom:8px;">โทร. ${order.phone}</div><div style="font-size:12px; color:#718096; white-space: pre-line; line-height:1.5; border-top:1px dashed #cbd5e0; padding-top:8px; margin-top:8px;">${order.address}</div></div>
+                    <div style="background:#f8fafc; padding:16px; border-radius:12px; border:1px solid #e2e8f0;"><div style="font-weight:700; color:var(--primary); font-size:13px; margin-bottom:8px; display:flex; align-items:center; gap:6px;"><span class="material-icons-round" style="font-size:18px;">local_shipping</span> ข้อมูลการจัดส่ง</div><table style="width:100%; font-size:13px; border-collapse:separate; border-spacing:0 6px;"><tr><td style="color:var(--text-muted);">ช่องทาง:</td><td align="right" style="font-weight:600;">${order.channel || '-'}</td></tr><tr><td style="color:var(--text-muted);">การชำระเงิน:</td><td align="right" style="font-weight:600;">${order.payment || '-'}</td></tr><tr><td style="color:var(--text-muted);">สถานะปัจจุบัน:</td><td align="right" style="font-weight:600; color:var(--primary);">${order.status}</td></tr></table></div>
+                </div>
+                <div style="border:1px solid var(--border); border-radius:12px; overflow:hidden;"><table style="font-size:13px;"><thead style="background:#f9fafb;"><tr><th style="padding:10px 16px; width:40px; text-align:center;">#</th><th style="padding:10px 16px;">รายการสินค้า</th><th style="padding:10px 16px; width:60px; text-align:center;">จำนวน</th><th style="padding:10px 16px; width:100px; text-align:right;">ยอดรวม</th></tr></thead><tbody>${(order.items || []).map((i, idx) => `<tr><td align="center" style="color:var(--text-muted);">${idx + 1}</td><td><div style="font-weight:600;">${i.name}</div><div style="font-size:11px; color:var(--text-muted);">SKU: ${i.sku || '-'}</div></td><td align="center">x ${i.qty}</td><td align="right" style="font-weight:600;">฿${(i.qty * i.price).toLocaleString()}</td></tr>`).join('')}</tbody></table></div>
+                <div style="display:flex; justify-content:flex-end; margin-top:20px;"><div style="width:250px;"><div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:13px; color:var(--text-muted);"><span>ยอดรวม (Subtotal)</span><span>฿${(Number(order.subtotal) || Number(order.total)).toLocaleString()}</span></div><div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:13px; color:var(--danger-text);"><span>ส่วนลด (Discount)</span><span>-฿${(Number(order.discount) || 0).toLocaleString()}</span></div><div style="display:flex; justify-content:space-between; padding-top:12px; border-top:2px solid var(--border); font-size:18px; font-weight:800; color:var(--primary);"><span>ยอดสุทธิ</span><span>฿${(Number(order.total) || 0).toLocaleString()}</span></div></div></div>
+            </div>
+            <div class="modal-footer"><div style="margin-right:auto;"><button class="btn btn-outline btn-sm" onclick="printFromDetail('withdrawal')" title="พิมพ์ใบเบิก"><span class="material-icons-round" style="font-size:18px;">inventory</span></button><button class="btn btn-outline btn-sm" onclick="printFromDetail('quotation')" title="พิมพ์ใบเสนอราคา"><span class="material-icons-round" style="font-size:18px;">description</span></button><button class="btn btn-outline btn-sm" onclick="printFromDetail('invoice')" title="พิมพ์ใบเสร็จ"><span class="material-icons-round" style="font-size:18px;">receipt</span></button></div><button class="btn btn-primary" onclick="closeModal(null, true)">ปิดหน้าต่าง</button></div>
+        `;
+        document.getElementById('detail-modal').classList.remove('hidden');
+    }
+
+    function printFromDetail(type) {
+        const idText = document.querySelector('.modal-header h2').innerText;
+        const id = idText.replace('ออเดอร์ ', '');
+        const order = db.orders.find(o => o.id === id);
+        if (order) { 
+            const wrapperClass = type === 'withdrawal' ? 'print-withdrawal-item' : 'print-page';
+            document.getElementById('printable-area').innerHTML = `<div class="${wrapperClass}">${generateCorporateHtml(order, type)}</div>`; 
+            setTimeout(() => { window.print(); document.getElementById('printable-area').innerHTML = ''; }, 500); 
+        }
+    }
+
+    function bulkPrint(type) {
+        const selectedIds = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(c => c.value);
+        if (selectedIds.length === 0) return;
+        
+        let allHtml = '';
+        if (type === 'combined_withdrawal') {
+            allHtml = generateCombinedWithdrawalHtml(selectedIds);
+        } else {
+            const wrapperClass = type === 'withdrawal' ? 'print-withdrawal-item' : 'print-page';
+            selectedIds.forEach(id => {
+                const order = db.orders.find(o => o.id === id);
+                if (order) allHtml += `<div class="${wrapperClass}">${generateCorporateHtml(order, type)}</div>`;
+            });
+        }
+        
+        document.getElementById('printable-area').innerHTML = allHtml;
+        setTimeout(() => { window.print(); document.getElementById('printable-area').innerHTML = ''; }, 500);
+    }
+    
+    async function bulkUpdateStatus(status) {
+        const selectedIds = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(c => c.value);
+        if (selectedIds.length === 0) return;
+        
+        if(!confirm(`ยืนยันเปลี่ยนสถานะ ${selectedIds.length} รายการเป็น "${status}"?`)) return;
+
+        showToast("กำลังอัปเดตสถานะ...", 0);
+        
+        let updatedCount = 0;
+        const updates = [];
+        
+        db.orders.forEach(o => {
+            if(selectedIds.includes(o.id)) {
+                o.status = status;
+                updatedCount++;
+                updates.push(o);
+            }
+        });
+        
+        save();
+        renderOrders();
+        renderDashboard();
+        updateBulk(); 
+        
+        showToast(`อัปเดต ${updatedCount} รายการเรียบร้อย`, 2000);
+        
+        for (const o of updates) {
+           try {
+               await fetch(SCRIPT_URL, { 
+                   method: 'POST', 
+                   mode: 'no-cors', 
+                   headers: { 'Content-Type': 'application/json' }, 
+                   body: JSON.stringify({ action: 'updateStatus', id: o.id, status: status }) 
+               });
+           } catch(e) { console.error("Sync error:", e); }
+        }
+    }
+
+    // --- HTML Generators ---
+    function generateCombinedWithdrawalHtml(ids) {
+        const summary = {};
+        ids.forEach(id => {
+            const order = db.orders.find(o => o.id === id);
+            if (order && order.items) {
+                order.items.forEach(item => {
+                    const key = item.sku || item.name;
+                    if (!summary[key]) {
+                        summary[key] = { name: item.name, sku: item.sku, qty: 0 };
+                    }
+                    summary[key].qty += Number(item.qty);
+                });
+            }
+        });
+
+        const rows = Object.values(summary).map((i, idx) => `
+            <tr>
+              <td style="text-align:center; border: 1px solid #333; padding: 10px;">${idx + 1}</td>
+              <td style="border: 1px solid #333; padding: 10px;">${i.name}<br><small style="color:#666">SKU: ${i.sku || '-'}</small></td>
+              <td style="text-align:center; border: 1px solid #333; padding: 10px; font-weight: 800; font-size: 18px; color: var(--primary);">${i.qty}</td>
+              <td style="border: 1px solid #333; padding: 10px; text-align: center; font-size: 16px;">[ &nbsp;&nbsp; ]</td>
+            </tr>
+        `).join('');
+
+        return `
+            <div style="padding:40px; font-family:'Sarabun', sans-serif; color: #000; line-height: 1.4; background:#fff;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 3px solid var(--primary); padding-bottom: 15px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                  <img src="${COMPANY_INFO.logo}" style="height:50px;">
+                  <div>
+                    <div style="font-weight:800; font-size:18px; color: var(--primary);">${COMPANY_INFO.name}</div>
+                    <div style="font-size: 12px; color:#666;">สรุปรายการเบิกสินค้าทั้งหมด (Summary Pick List)</div>
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:12px; font-weight:700;">วันที่ออกเอกสาร: ${new Date().toLocaleDateString('th-TH')}</div>
+                  <div style="font-size:12px; color:#666;">จำนวนออเดอร์ที่รวม: ${ids.length} รายการ</div>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 20px; font-size: 14px; font-weight: 700; color: #333;">รายการที่ต้องเตรียมทั้งหมด:</div>
+              
+              <table style="width:100%; border-collapse:collapse; margin-bottom:30px; font-size: 14px;">
+                <thead>
+                  <tr style="background:var(--primary); color: #fff;">
+                    <th style="border: 1px solid #333; padding: 12px; width: 60px; text-align: center;">No.</th>
+                    <th style="border: 1px solid #333; padding: 12px; text-align: left;">ชื่อสินค้า / SKU</th>
+                    <th style="border: 1px solid #333; padding: 12px; width: 100px; text-align: center;">จำนวนรวม</th>
+                    <th style="border: 1px solid #333; padding: 12px; width: 100px; text-align: center;">Check</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+
+              <div style="background: #f8fafc; border: 1px dashed #cbd5e0; padding: 20px; border-radius: 8px; font-size: 12px; margin-top: 50px;">
+                <b>หมายเหตุ:</b> รายการนี้เป็นการรวมยอดจากหลายออเดอร์เพื่อให้คลังสินค้าหยิบของได้รวดเร็ว กรุณาใช้ประกอบกับใบเบิกแยกรายการเพื่อแพ็คสินค้าลงกล่องให้ถูกต้อง
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; margin-top: 80px; text-align: center; font-size: 13px;">
+                <div><div style="border-bottom: 1px solid #000; margin-bottom: 10px; height: 40px;"></div><div style="font-weight: 700;">เจ้าหน้าที่คลังสินค้า (ผู้จัดของ)</div></div>
+                <div><div style="border-bottom: 1px solid #000; margin-bottom: 10px; height: 40px;"></div><div style="font-weight: 700;">เจ้าหน้าที่ตรวจสอบ (QC)</div></div>
+              </div>
+            </div>
+        `;
+    }
+
+    function generateCorporateHtml(order, type) {
+        const isWithdrawal = type === 'withdrawal';
+        const isQuotation = type === 'quotation';
+        let docTitle = isQuotation ? 'ใบเสนอราคา<br><small style="font-size: 12px; color: #666;">QUOTATION</small>' : 'ใบแจ้งหนี้ / ใบเสร็จรับเงิน<br><small style="font-size: 12px; color: #666;">INVOICE / RECEIPT</small>';
+        if (isWithdrawal) docTitle = 'ใบเบิกสินค้า / PICK LIST';
+
+        if (isWithdrawal) {
+          const itemsRows = (order.items || []).map((i, idx) => `
+              <tr>
+                <td style="text-align:center; border: 1px solid #333; padding: 6px;">${idx + 1}</td>
+                <td style="border: 1px solid #333; padding: 6px;">${i.name}<br><small style="color:#666">SKU: ${i.sku || '-'}</small></td>
+                <td style="text-align:center; border: 1px solid #333; padding: 6px; font-weight: bold; font-size: 15px; color: var(--primary);">${Number(i.qty).toFixed(0)}</td>
+                <td style="border: 1px solid #333; padding: 6px; text-align: center;">[ &nbsp;&nbsp; ]</td>
+              </tr>
+          `).join('');
+
+          return `
+            <div style="padding:10mm 20mm; font-family:'Sarabun', sans-serif; color: #000; line-height: 1.3; flex-grow: 1;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4mm; border-bottom: 1px solid #eee; padding-bottom: 2mm;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <img src="${COMPANY_INFO.logo}" style="height:30px;">
+                  <div>
+                    <div style="font-weight:700; font-size:12px;">${COMPANY_INFO.name}</div>
+                    <div style="font-size: 9px; color:#666;">Tax ID: ${COMPANY_INFO.taxId} | Tel: ${COMPANY_INFO.tel}</div>
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:15px; font-weight:800; color:var(--primary); text-transform: uppercase; margin-bottom: 2px;">${docTitle}</div>
+                  <div style="font-size: 10px; font-weight:700;">ID: ${order.id} | วันที่: ${safeDate(order.date)}</div>
+                </div>
+              </div>
+              <div style="background: #f9fafb; padding: 3mm; border-radius: 4px; margin-bottom: 4mm; font-size: 10px; line-height: 1.4; border: 1px solid #eee;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 1mm; margin-bottom: 1mm;">
+                  <div><b>ลูกค้า:</b> ${order.name} (${order.phone})</div>
+                  <div style="text-align:right;"><b>ช่องทาง:</b> ${order.channel || '-'}</div>
+                </div>
+                <div style="color: #444; white-space: pre-line;"><b>ที่อยู่จัดส่ง:</b> ${order.address}</div>
+              </div>
+              <table style="width:100%; border-collapse:collapse; margin-bottom:5mm; font-size: 10px;">
+                <thead>
+                  <tr style="background:#f2f2f2; color: #333;">
+                    <th style="border: 1px solid #333; padding: 6px; width: 35px; text-align: center;">No.</th>
+                    <th style="border: 1px solid #333; padding: 6px; text-align: left;">รายการสินค้า</th>
+                    <th style="border: 1px solid #333; padding: 6px; width: 55px; text-align: center;">จำนวน</th>
+                    <th style="border: 1px solid #333; padding: 6px; width: 60px; text-align: center;">Check</th>
+                  </tr>
+                </thead>
+                <tbody>${itemsRows}</tbody>
+              </table>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; text-align: center; font-size: 9px; margin-top: auto; padding-bottom: 5mm;">
+                <div><div style="border-bottom: 1px solid #000; height: 12px; margin-bottom: 3px;"></div><div style="font-weight: 700;">ผู้เบิกของ (Picker)</div></div>
+                <div><div style="border-bottom: 1px solid #000; height: 12px; margin-bottom: 3px;"></div><div style="font-weight: 700;">QC / ตรวจสอบ</div></div>
+                <div><div style="border-bottom: 1px solid #000; height: 12px; margin-bottom: 3px;"></div><div style="font-weight: 700;">ผู้จ่ายของ (Warehouse)</div></div>
+              </div>
+            </div>
+          `;
+        } else {
+          const itemsRows = (order.items || []).map((i, idx) => `
+              <tr>
+                <td style="text-align:center; border: 1px solid #333; padding: 10px;">${idx + 1}</td>
+                <td style="border: 1px solid #333; padding: 10px;">${i.name}<br><small style="color:#666">SKU: ${i.sku || '-'}</small></td>
+                <td style="text-align:center; border: 1px solid #333; padding: 10px;">${Number(i.qty).toFixed(2)}</td>
+                <td style="text-align:right; border: 1px solid #333; padding: 10px;">${Number(i.price).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                <td style="text-align:right; border: 1px solid #333; padding: 10px;">${(i.qty * i.price).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+              </tr>
+          `).join('');
+
+          return `
+            <div style="padding:50px; font-family:'Sarabun', sans-serif; color: #000; line-height: 1.4; background:#fff;">
+              <div style="display: grid; grid-template-columns: 1.8fr 1fr; gap: 40px; margin-bottom: 30px;">
+                <div>
+                  <div style="margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+                    <img src="${COMPANY_INFO.logo}" style="height:55px; margin-bottom:12px; display: block;">
+                    <div style="font-weight:700; font-size:16px; margin-bottom: 4px;">${COMPANY_INFO.name}</div>
+                    <div style="font-size: 12px; color:#333;">${COMPANY_INFO.address}</div>
+                    <div style="font-size: 12px; margin-top: 6px;">TEL: ${COMPANY_INFO.tel} | Tax ID: ${COMPANY_INFO.taxId}</div>
+                  </div>
+                  <div style="font-size: 12px;">
+                    <div style="font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 6px; font-size: 11px;">ลูกค้า / Customer (Bill To)</div>
+                    <div style="font-weight:700; font-size:15px; margin-bottom: 4px;">${order.name}</div>
+                    <div style="color:#333; white-space: pre-line;">${order.address}</div>
+                    <div style="margin-top: 5px; font-weight: 600;">โทร. ${order.phone}</div>
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:22px; font-weight:800; color:#000; margin-bottom: 20px; text-transform: uppercase;">${docTitle}</div>
+                  <table style="width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 15px;">
+                    <tr><td align="right" style="padding: 4px 10px; color:#666;">เลขที่ / No.</td><td align="right" style="padding: 4px 0; font-weight:700;">${order.id}</td></tr>
+                    <tr><td align="right" style="padding: 4px 10px; color:#666;">วันที่ / Date</td><td align="right" style="padding: 4px 0; font-weight:700;">${safeDate(order.date)}</td></tr>
+                    <tr><td align="right" style="padding: 4px 10px; color:#666;">การชำระเงิน / Terms</td><td align="right" style="padding: 4px 0; font-weight:700;">${order.payment || 'โอนเงิน'}</td></tr>
+                  </table>
+                </div>
+              </div>
+              <div style="border-top: 3px solid #000; margin-bottom: 20px;"></div>
+              <table style="width:100%; border-collapse:collapse; margin-bottom:30px; font-size: 13px;">
+                <thead>
+                  <tr style="background:#f8fafc;">
+                    <th style="border: 1px solid #333; padding: 12px 8px; width: 50px; text-align: center;">No.</th>
+                    <th style="border: 1px solid #333; padding: 12px 8px; text-align: left;">รายการสินค้า (Descriptions)</th>
+                    <th style="border: 1px solid #333; padding: 12px 8px; width: 80px; text-align: center;">จำนวน</th>
+                    <th style="border: 1px solid #333; padding: 12px 8px; width: 110px; text-align: right;">หน่วยละ</th>
+                    <th style="border: 1px solid #333; padding: 12px 8px; width: 130px; text-align: right;">จำนวนเงิน</th>
+                  </tr>
+                </thead>
+                <tbody>${itemsRows}</tbody>
+              </table>
+              <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 50px;">
+                <div style="font-size: 11px;">
+                  <div style="font-weight: 700; margin-bottom: 8px;">หมายเหตุ / Remark:</div>
+                  <div style="border: 1px solid #eee; padding: 15px; min-height: 100px; color: #444; border-radius: 6px; line-height: 1.6;">
+                    1. ราคานี้รวมภาษีมูลค่าเพิ่มแล้ว (ถ้ามี)<br>2. กำหนดยืนราคา 30 วันนับจากวันที่เสนอราคา<br>3. สินค้าซื้อแล้วไม่รับเปลี่ยนหรือคืน
+                  </div>
+                </div>
+                <div style="font-size: 13px;">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 8px 0;">Gross Amount</td><td align="right" style="font-weight: 700;">฿${(Number(order.subtotal) || Number(order.total)).toLocaleString()}</td></tr>
+                    <tr style="color: #ef4444;"><td style="padding: 8px 0;">Less Discount</td><td align="right" style="font-weight: 700;">-฿${(Number(order.discount) || 0).toLocaleString()}</td></tr>
+                    <tr style="border-top: 2px solid #000; font-weight: 800; font-size: 16px;"><td style="padding: 15px 0;">Grand Total</td><td align="right" style="padding: 15px 0; color: var(--primary);">฿${Number(order.total).toLocaleString()}</td></tr>
+                  </table>
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 100px; margin-top: 80px; text-align: center; font-size: 12px;">
+                <div><div style="border-bottom: 1px solid #000; margin-bottom: 10px; height: 40px;"></div><div style="font-weight: 700;">ผู้อนุมัติสั่งซื้อ / Authorized By</div></div>
+                <div><div style="border-bottom: 1px solid #000; margin-bottom: 10px; height: 40px;"></div><div style="font-weight: 700;">ผู้เสนอราคา / Sale Person</div></div>
+              </div>
+            </div>
+          `;
+        }
+    }
+
+    // --- Packing Logic (Refined) ---
+    function renderPacking() {
+        const p = db.orders.filter(o => o.status === 'Paid');
+        document.getElementById('pack-queue-count').innerText = p.length;
+        
+        const list = document.getElementById('pack-pending-list');
+        list.innerHTML = p.length ? p.map(o => `
+            <div class="pack-order-card" onclick="startPacking('${o.id}')">
+                <div style="display:flex; justify-content:space-between;">
+                    <div style="font-weight:700;">${o.id}</div>
+                    <div style="font-size:12px; color:var(--text-muted);">${safeDate(o.date)}</div>
+                </div>
+                <div style="font-size:13px; margin-top:4px; color:var(--text-main);">${o.name}</div>
+                <div style="font-size:12px; margin-top:6px; color:var(--primary); font-weight:600;">
+                    <span class="material-icons-round" style="font-size:12px; vertical-align:middle;">shopping_bag</span> 
+                    ${(o.items || []).length} รายการ
+                </div>
+            </div>
+        `).join('') : '<div style="text-align:center; padding:20px; color:var(--text-muted);">ไม่มีรายการรอแพ็ค</div>';
+    }
+
+    function startPacking(id) {
+        packingOrderId = id;
+        const order = db.orders.find(o => o.id === id);
+        if(!order) return;
+
+        // Reset UI
+        document.getElementById('pack-idle-state').classList.add('hidden');
+        document.getElementById('pack-active-state').classList.remove('hidden');
+        
+        // Populate Header
+        document.getElementById('pack-order-id').innerText = order.id;
+        document.getElementById('pack-customer-name').innerText = order.name;
+        
+        // Prepare tracking
+        currentPackItems = order.items.map(i => ({
+            sku: (i.sku || '').toLowerCase().trim(),
+            name: i.name,
+            needed: Number(i.qty),
+            scanned: 0
+        }));
+        
+        renderPackItems();
+        
+        // Focus input
+        setTimeout(() => document.getElementById('pack-scan').focus(), 100);
+    }
+
+    function renderPackItems() {
+        let totalNeeded = 0;
+        let totalScanned = 0;
+        
+        const listHtml = currentPackItems.map((item, idx) => {
+            totalNeeded += item.needed;
+            totalScanned += item.scanned;
+            const isComplete = item.scanned >= item.needed;
+            
+            return `
+                <div class="pack-item-row ${isComplete ? 'completed' : ''}">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:40px; height:40px; background:${isComplete ? '#dcfce7' : '#f1f5f9'}; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                            <span class="material-icons-round" style="color:${isComplete ? 'var(--success-text)' : 'var(--text-light)'};">${isComplete ? 'check' : 'inventory_2'}</span>
+                        </div>
+                        <div>
+                            <div style="font-weight:600; font-size:15px;">${item.name}</div>
+                            <div style="font-size:12px; color:var(--text-muted);">SKU: ${item.sku || '-'}</div>
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:20px; font-weight:700; color:${isComplete ? 'var(--success-text)' : 'var(--text-main)'};">
+                            ${item.scanned} / ${item.needed}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        document.getElementById('pack-items-list').innerHTML = listHtml;
+        
+        // Update Progress
+        const percent = Math.floor((totalScanned / totalNeeded) * 100) || 0;
+        document.getElementById('pack-progress-bar').style.width = percent + '%';
+        document.getElementById('pack-progress-text').innerText = percent + '%';
+        
+        // Enable Finish Button if Done
+        document.getElementById('btn-finish-pack').disabled = (totalScanned < totalNeeded);
+    }
+
+    function handlePackScan(e) {
+        if(e.key === 'Enter' || e.keyCode === 13) {
+            const val = e.target.value.trim().toLowerCase();
+            if(!val) return;
+            
+            // Logic: Find item match
+            const targetItem = currentPackItems.find(i => i.sku === val && i.scanned < i.needed);
+            
+            if (targetItem) {
+                // Success
+                targetItem.scanned++;
+                e.target.value = '';
+                renderPackItems();
+                showToast("ถูกต้อง: " + targetItem.name, 1000);
+            } else {
+                // Error / Already full
+                const alreadyFull = currentPackItems.find(i => i.sku === val && i.scanned >= i.needed);
+                if (alreadyFull) {
+                    showToast("สินค้านี้ครบจำนวนแล้ว!", 2000);
+                } else {
+                    showToast("ไม่พบสินค้านี้ในออเดอร์!", 2000);
+                }
+                
+                // Visual feedback
+                e.target.classList.add('error');
+                setTimeout(() => e.target.classList.remove('error'), 300);
+                e.target.value = '';
+            }
+        }
+    }
+
+    function cancelPacking() {
+        if(!confirm("ต้องการยกเลิกการแพ็คออเดอร์นี้?")) return;
+        packingOrderId = null;
+        document.getElementById('pack-active-state').classList.add('hidden');
+        document.getElementById('pack-idle-state').classList.remove('hidden');
+    }
+
+    async function finishPacking() {
+      if(!packingOrderId) return;
+      
+      const order = db.orders.find(o => o.id === packingOrderId);
+      if(!order) return;
+
+      if(!confirm(`ยืนยันการแพ็คออเดอร์ ${order.id} เรียบร้อย?`)) return;
+
+      order.status = 'Shipped';
+      save();
+      
+      showToast("แพ็คสินค้าเรียบร้อย");
+      
+      // Return to idle state
+      packingOrderId = null;
+      renderPacking();
+      renderDashboard(); // Update stats
+      document.getElementById('pack-active-state').classList.add('hidden');
+      document.getElementById('pack-idle-state').classList.remove('hidden');
+
+      try {
+        await fetch(SCRIPT_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ action: 'updateStatus', id: order.id, status: 'Shipped' }) 
+        });
+      } catch(e) { console.error(e); }
+    }
+
+    // --- Dropdown Toggle Logic ---
+    function toggleDropdown(id, event) {
+        event.stopPropagation();
+        const el = document.getElementById(id);
+        const isShown = el.classList.contains('show');
+        
+        // Close all first
+        document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+        
+        // Toggle target
+        if (!isShown) el.classList.add('show');
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.dropdown')) {
+            document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+        }
+    });
+
+    // --- Router Function ---
+    function router(view, el) {
+      document.querySelectorAll('main > div').forEach(v => v.classList.add('hidden'));
+      document.getElementById('view-' + view).classList.remove('hidden');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      if(el) el.classList.add('active');
+      
+      if(view === 'dashboard') renderDashboard();
+      if(view === 'orders') renderOrders();
+      if(view === 'packing') renderPacking();
+      if(view === 'products') renderProducts();
+      if(view === 'customers') renderCustomers();
+      if(view === 'history') fetchHistory();
+      
+      if(view === 'create' && !editingOrderId) {
+        document.getElementById('create-title').innerText = "สร้างออเดอร์ใหม่";
+        document.getElementById('btn-save').innerText = "บันทึกออเดอร์";
+        document.getElementById('btn-save').className = "btn btn-primary btn-lg";
+        document.getElementById('in-name').value = '';
+        document.getElementById('in-phone').value = '';
+        document.getElementById('in-address').value = '';
+        document.getElementById('form-discount-input').value = 0;
+        document.getElementById('form-items-container').innerHTML = '';
+        addFormRow();
+        calcTotal();
+      }
+    }
+
+    // --- Boot ---
+    function initApp() {
+        router('dashboard'); 
+        fetchHistory(); 
+        setInterval(() => fetchHistory(true), 300000);
+    }
+
+    window.onload = initApp;
+  </script>
+</body>
+</html>
