@@ -638,105 +638,267 @@
     #printable-area { display: none; background: white; color: black; }
 
     /* ============================================================
-      MOBILE RESPONSIVE CSS (วางส่วนนี้เพิ่มเข้าไปล่างสุดของ Style)
+      MOBILE RESPONSIVE CSS - (CARD LAYOUT & VERTICAL SCROLL)
       ============================================================ */
     @media (max-width: 900px) {
-      /* 1. จัดโครงสร้างหลักใหม่ (Main Layout) */
+      /* 1. Reset Body & Layout */
       body {
-        flex-direction: column; /* เปลี่ยนแนวเป็น บน-ล่าง */
+        flex-direction: column;
         height: 100vh;
-        overflow: hidden; /* ห้าม Scroll ที่ Body หลัก */
+        overflow: hidden;
       }
 
-      /* 2. เปลี่ยน Sidebar ด้านข้าง เป็น เมนูบาร์ด้านล่าง (Bottom Nav) */
+      .main-content {
+        padding: 16px 16px 100px 16px; /* Increased bottom padding for nav */
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* 2. Bottom Navigation - Focused on "Create Order" */
       .sidebar {
         position: fixed;
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 65px; /* ความสูงเมนู */
-        flex-direction: row; /* เรียงปุ่มแนวนอน */
-        justify-content: space-around; /* กระจายปุ่มให้เท่ากัน */
-        padding: 0 5px;
+        height: 70px;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        padding: 0 10px;
         z-index: 2000;
         box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
         border-top: 1px solid rgba(255,255,255,0.1);
-        overflow-x: auto; /* เผื่อหน้าจอเล็กมาก */
+        background: var(--bg-sidebar); /* Dark theme */
+        overflow: visible;
       }
 
-      .brand { display: none; } /* ซ่อนโลโก้ */
-      
+      .brand { display: none; }
+
       .nav-item {
-        flex-direction: column; /* ไอคอนอยู่บน ตัวหนังสืออยู่ล่าง */
-        gap: 2px;
+        flex-direction: column;
+        gap: 4px;
         font-size: 10px;
-        padding: 6px 2px;
+        padding: 8px;
         justify-content: center;
-        width: 100%;
+        width: auto;
+        min-width: 60px;
         border-radius: 8px;
-        margin: 4px 2px;
-        text-align: center;
-        white-space: nowrap;
+        margin: 0;
+        color: #94a3b8;
       }
 
-      .nav-item .material-icons-round { font-size: 24px; }
-      
-      /* 3. ปรับพื้นที่เนื้อหา (Content) ให้ไม่โดนเมนูบัง */
-      .main-content {
-        padding: 16px 16px 90px 16px; /* เว้นด้านล่าง 90px ให้เมนู */
-        width: 100%;
-        height: 100%;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch; /* ให้เลื่อนลื่นๆ บน iOS */
+      /* Highlight "Create Order" Button */
+      .nav-item[onclick*="'create'"] {
+        margin-top: 0 !important;
+        background: var(--primary-accent);
+        color: white;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        transform: translateY(-20px);
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.5);
+        border: 4px solid var(--bg-body); /* Cutout effect */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 2001;
       }
+      
+      .nav-item[onclick*="'create'"] .material-icons-round { font-size: 28px; }
+      .nav-item[onclick*="'create'"]:active { transform: translateY(-18px) scale(0.95); }
 
-      /* 4. หน้า Dashboard (เรียง 2 แถว) */
-      .dash-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-      .dash-charts-grid, .dash-bottom-grid { grid-template-columns: 1fr; gap: 16px; }
-      .dash-controls { justify-content: space-between; gap: 10px; }
-      
-      /* 5. หน้าสร้างออเดอร์ (Forms Stack) */
-      #view-create form > div { grid-template-columns: 1fr !important; gap: 16px; }
-      
-      /* ปรับรายการสินค้าตอนกรอก (Item List Row) ให้ดูง่ายขึ้น */
-      .item-list-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr 40px; /* ชื่อสินค้า | ราคา+จำนวน | ปุ่มลบ */
+      /* 3. Hide Filters/Controls to reduce clutter */
+      .dash-controls {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 10px;
         gap: 8px;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        padding: 12px;
-        border-radius: 8px;
+      }
+      .page-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 22px;
+      }
+      .page-title > div { width: 100%; display: flex; justify-content: space-between; }
+      
+      /* 4. TABLE TO CARD TRANSFORMATION (No Horizontal Scroll) */
+      .table-erp, .table-erp tbody, .table-erp tr, .table-erp td {
+        display: block;
+        width: 100%;
+      }
+      
+      .table-erp {
+        border: none;
+        background: transparent;
+      }
+
+      .table-erp thead { display: none; } /* Hide Header */
+
+      .table-erp tr {
+        margin-bottom: 16px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: white;
+        box-shadow: var(--shadow-sm);
+        padding: 16px;
+        position: relative;
+      }
+
+      .table-erp td {
+        padding: 4px 0;
+        border: none;
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      /* Specific Styles for Order List Cards */
+      #order-list-body tr td:nth-child(1) { /* Checkbox */
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: auto;
+        padding: 0;
+      }
+      #order-list-body tr td:nth-child(2) { /* ID */
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--primary);
         margin-bottom: 8px;
       }
-      .item-list-row .form-control { margin-bottom: 0; }
-      .item-list-row .item-name { grid-column: 1 / -1; width: 100%; } /* ชื่อสินค้าเต็มแถว */
-      .item-list-row .item-sku { display: none; } /* ซ่อน SKU ชั่วคราวเพื่อให้ไม่รก */
-      .item-list-row button { height: 100%; display: flex; align-items: center; justify-content: center; }
-
-      /* ซ่อน Header ตารางรายการสินค้า */
-      #view-create .card h3 + div { display: none; }
-
-      /* 6. หน้า Packing (Tab View) */
-      .packing-layout { display: flex; flex-direction: column; height: auto; }
-      .pack-list-col { height: 250px; margin-bottom: 16px; flex-shrink: 0; }
-      .pack-workspace { height: 500px; min-height: 50vh; }
-      
-      /* 7. ตารางข้อมูล (Table Scroll) */
-      .table-erp { display: block; overflow-x: auto; white-space: nowrap; }
-      .table-erp th, .table-erp td { padding: 12px 10px; font-size: 13px; }
-      
-      /* 8. Modal (Popup) */
-      .modal-content {
-        width: 95% !important;
-        max-height: 90vh;
-        border-radius: 12px;
+      #order-list-body tr td:nth-child(3) { /* Customer */
+        font-size: 14px;
+        color: var(--text-main);
+        font-weight: 500;
+        border-bottom: 1px dashed var(--border);
+        padding-bottom: 8px;
+        margin-bottom: 8px;
       }
-      .modal-body { padding: 20px; }
+      #order-list-body tr td:nth-child(4) { /* Items */
+        display: block;
+        background: #f8fafc;
+        padding: 10px;
+        border-radius: 8px;
+        margin: 8px 0;
+      }
+      #order-list-body tr td:nth-child(5) { /* Total */
+        justify-content: flex-end;
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text-main);
+      }
+      #order-list-body tr td:nth-child(5)::before {
+        content: 'ยอดรวม: ';
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: normal;
+        margin-right: 8px;
+      }
+      #order-list-body tr td:nth-child(6) { /* Status */
+        justify-content: flex-start;
+      }
+      #order-list-body tr td:nth-child(7) { /* Actions */
+        border-top: 1px solid var(--border);
+        margin-top: 12px;
+        padding-top: 12px;
+        justify-content: center;
+        gap: 16px;
+      }
 
-      /* 9. ปรับขนาดปุ่มให้กดง่าย (Touch Friendly) */
-      .btn, .form-control { min-height: 44px; font-size: 14px; }
-      .action-btn { padding: 10px; margin: 0 2px; background: #f1f5f9; border-radius: 8px; }
+      /* Specific Styles for Product List Cards */
+      #product-list-body tr {
+        display: grid;
+        grid-template-columns: 60px 1fr;
+        grid-template-rows: auto auto auto;
+        gap: 8px;
+      }
+      #product-list-body td { display: block; padding: 0; }
+      
+      #product-list-body td:nth-child(1) { /* Image */
+        grid-row: 1 / 4;
+        grid-column: 1;
+      }
+      #product-list-body td:nth-child(1) img, 
+      #product-list-body td:nth-child(1) div { width: 60px; height: 60px; }
+
+      #product-list-body td:nth-child(2) { /* SKU */
+        grid-column: 2;
+        font-weight: bold;
+        font-size: 14px;
+      }
+      #product-list-body td:nth-child(4) { /* Name */
+        grid-column: 2;
+        font-size: 13px;
+        color: var(--text-muted);
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis;
+      }
+      #product-list-body td:nth-child(5) { /* Price */
+        grid-column: 2;
+        font-weight: 800;
+        color: var(--primary);
+        text-align: right;
+      }
+      #product-list-body td:nth-child(3) { display: none; } /* Hide Barcode text on mobile card */
+      #product-list-body td:nth-child(6) { /* Actions */
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 8px;
+        border-top: 1px dashed var(--border);
+        padding-top: 8px;
+      }
+
+      /* 5. Create Order Form - Full Width Stack */
+      #view-create form > div {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      
+      .item-list-row {
+        display: grid;
+        grid-template-columns: 1fr auto 40px; /* Name | Price/Qty area | Delete */
+        gap: 10px;
+        background: #fff;
+        border: 1px solid var(--border);
+        padding: 12px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      }
+      
+      .item-list-row .item-name { 
+        grid-column: 1 / -1; 
+        font-weight: 600;
+      }
+      
+      .item-list-row .item-sku { display: none; } /* Hide SKU input to save space */
+      
+      .item-list-row .item-qty { width: 70px; }
+      .item-list-row .item-price { width: 80px; }
+      
+      /* 6. Dashboard Grid */
+      .dash-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .dash-charts-grid, .dash-bottom-grid { grid-template-columns: 1fr; }
+      
+      /* 7. Modal Full Screen */
+      .modal-content {
+        width: 100% !important;
+        height: 100%;
+        max-height: 100%;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .modal-body { flex: 1; padding: 20px; }
+      .modal-footer { padding: 16px; }
     }
   </style>
 </head>
@@ -749,12 +911,13 @@
         ONSET ERP
     </div>
     <div class="nav-item active" onclick="router('dashboard', this)"><span class="material-icons-round">dashboard</span> Dashboard</div>
-    <div class="nav-item" onclick="router('orders', this)"><span class="material-icons-round">shopping_bag</span> รายการออเดอร์</div>
-    <div class="nav-item" onclick="router('history', this)"><span class="material-icons-round">history</span> ประวัติ Sheet</div>
-    <div class="nav-item" onclick="router('packing', this)"><span class="material-icons-round">inventory</span> แพ็คสินค้า</div>
-    <div class="nav-item" onclick="router('products', this)"><span class="material-icons-round">category</span> คลังสินค้า</div>
+    <div class="nav-item" onclick="router('orders', this)"><span class="material-icons-round">shopping_bag</span> ออเดอร์</div>
+    <div class="nav-item" onclick="router('create', this)"><span class="material-icons-round">add</span></div> <!-- Highlighted Create Button -->
+    <div class="nav-item" onclick="router('products', this)"><span class="material-icons-round">category</span> คลัง</div>
+    <div class="nav-item" onclick="router('packing', this)"><span class="material-icons-round">inventory</span> แพ็ค</div>
+    <!-- Hidden items on mobile or moved to 'More' menu if needed, but keeping simple for now -->
+    <div class="nav-item" onclick="router('history', this)"><span class="material-icons-round">history</span> ประวัติ</div>
     <div class="nav-item" onclick="router('customers', this)"><span class="material-icons-round">people</span> ลูกค้า</div>
-    <div class="nav-item" onclick="router('create', this)" style="margin-top:auto; background:rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); justify-content: center;"><span class="material-icons-round">add_circle</span> สร้างออเดอร์</div>
   </nav>
 
   <!-- MAIN -->
@@ -876,10 +1039,7 @@
               <!-- Import Section -->
               <input type="file" id="import-order-file" hidden onchange="handleImportOrder(this)" accept=".csv, .xlsx, .xls">
               <button class="btn btn-success" onclick="triggerImportOrder()" title="Import CSV/Excel">
-                  <span class="material-icons-round">upload_file</span> Import รายการขาย
-              </button>
-              <button class="btn btn-outline btn-sm" style="border:none; color: var(--text-muted);" onclick="alert('โครงสร้างไฟล์ที่รองรับ:\nTimestamp, Order ID, Customer Name, Phone, Address, Channel, Payment, Product, SKU, Qty, Subtotal, Discount, Total, Status')">
-                  <span class="material-icons-round">help_outline</span>
+                  <span class="material-icons-round">upload_file</span> Import
               </button>
               <!-- End Import Section -->
               <button class="btn btn-primary" onclick="router('create')"><span class="material-icons-round">add</span> สร้างใหม่</button>
@@ -893,13 +1053,13 @@
           <div style="display:flex; gap:10px;">
               <!-- Delete Button (New Design) -->
               <button class="btn btn-soft-danger" onclick="bulkDelete()" style="margin-right: 12px;">
-                <span class="material-icons-round">delete</span> ลบรายการที่เลือก
+                <span class="material-icons-round">delete</span> ลบ
               </button>
               <div style="width: 1px; height: 32px; background: rgba(0,0,0,0.1); margin: auto 0;"></div>
               
               <div class="dropdown">
                 <button class="dropbtn" onclick="toggleDropdown('status-dd', event)" style="color: var(--text-main); border-color: var(--border);">
-                    <span class="material-icons-round">edit_note</span> เปลี่ยนสถานะ <span class="material-icons-round">expand_more</span>
+                    <span class="material-icons-round">edit_note</span> สถานะ <span class="material-icons-round">expand_more</span>
                 </button>
                 <div id="status-dd" class="dropdown-content">
                     <a onclick="bulkUpdateStatus('Paid')"><span class="badge badge-Paid" style="width:10px; height:10px; padding:0; display:inline-block; margin-right:5px;"></span> Paid (พร้อมส่ง/รอแพ็ค)</a>
@@ -908,7 +1068,7 @@
                 </div>
               </div>
               <div class="dropdown">
-                <button class="dropbtn" onclick="toggleDropdown('print-dd', event)"><span class="material-icons-round">print</span> พิมพ์เอกสาร <span class="material-icons-round">expand_more</span></button>
+                <button class="dropbtn" onclick="toggleDropdown('print-dd', event)"><span class="material-icons-round">print</span> พิมพ์ <span class="material-icons-round">expand_more</span></button>
                 <div id="print-dd" class="dropdown-content">
                   <a onclick="bulkPrint('quotation')"><span class="material-icons-round">description</span> ใบเสนอราคา (Quotation)</a>
                   <a onclick="bulkPrint('invoice')"><span class="material-icons-round">receipt</span> ใบเสร็จ/ใบกำกับ (Invoice)</a>
