@@ -106,6 +106,11 @@
       font-weight: 500;
     }
     
+    .nav-item:hover { 
+      background: rgba(255,255,255,0.05); 
+      color: #f1f5f9; 
+    }
+    
     .nav-item.active { 
       background: var(--primary); 
       color: white; 
@@ -280,6 +285,17 @@
 
     .btn-danger { background: var(--danger-bg); color: var(--danger-text); border-color: transparent; }
     .btn-danger:hover { background: #fecaca; }
+    
+    /* New Soft Danger Button for Bulk Actions */
+    .btn-soft-danger { 
+        background: #fff1f2; 
+        color: #b91c1c; 
+        border: 1px solid #fecaca; 
+    }
+    .btn-soft-danger:hover { 
+        background: #fee2e2; 
+        box-shadow: var(--shadow-sm);
+    }
 
     .btn-success { background: var(--success-bg); color: var(--success-text); }
     .btn-warning { background: var(--warning-bg); color: var(--warning-text); }
@@ -288,22 +304,58 @@
     .btn-lg { padding: 12px 24px; font-size: 16px; border-radius: 8px; }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(1); }
 
-    /* --- BADGES --- */
+    /* --- BADGES (REDESIGNED) --- */
     .badge { 
       padding: 4px 10px; 
-      border-radius: 99px; 
+      border-radius: 6px; /* Slightly squarer for professional look */
       font-size: 11px; 
-      font-weight: 600; 
+      font-weight: 700; 
       text-transform: uppercase; 
       display: inline-flex; 
       align-items: center; 
       gap: 4px; 
       letter-spacing: 0.5px;
+      line-height: 1;
     }
-    .badge-New { background: var(--info-bg); color: var(--info-text); }
-    .badge-Paid { background: var(--success-bg); color: var(--success-text); }
-    .badge-Shipped { background: var(--warning-bg); color: var(--warning-text); }
-    .badge-Imported { background: var(--imported-bg); color: var(--imported-text); } /* New Badge for Import */
+    
+    /* Status: NEW (Most Prominent) */
+    .badge-New { 
+        background: var(--primary); 
+        color: white; 
+        box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+    }
+    
+    /* Status: PAID (Success / Clear) */
+    .badge-Paid { 
+        background: var(--success-bg); 
+        color: var(--success-text); 
+        border: 1px solid #bbf7d0;
+    }
+    
+    /* Status: SHIPPED (Muted / Archive) */
+    .badge-Shipped { 
+        background: #f1f5f9; 
+        color: #64748b; 
+        border: 1px solid #e2e8f0; 
+    }
+    
+    .badge-Imported { background: var(--imported-bg); color: var(--imported-text); border: 1px solid #e9d5ff; }
+
+    /* --- ORDER ROW STYLES --- */
+    .order-row { transition: all 0.2s; border-left: 3px solid transparent; }
+    .order-row:hover { background-color: #f8fafc; }
+    
+    /* Highlight for NEW orders */
+    .order-row.is-new { 
+        background-color: #f8fafc; /* Subtle highlight */
+        border-left-color: var(--primary); /* Accent line */
+    }
+    .order-row.is-new td { color: var(--text-main); }
+    .order-row.is-new .order-id-text { color: var(--primary); font-weight: 800; }
+    
+    /* Dimmed for Shipped orders */
+    .order-row.is-shipped td { color: #64748b; }
+    .order-row.is-shipped .order-id-text { color: #64748b; font-weight: 500; text-decoration: none; }
 
     /* --- BULK ACTION BAR (FIXED CSS) --- */
     .bulk-action-bar {
@@ -781,6 +833,12 @@
             <span class="material-icons-round">check_circle</span> เลือกแล้ว <span id="selected-count" style="font-size: 18px;">0</span> รายการ
           </div>
           <div style="display:flex; gap:10px;">
+             <!-- Delete Button (New Design) -->
+             <button class="btn btn-soft-danger" onclick="bulkDelete()" style="margin-right: 12px;">
+                <span class="material-icons-round">delete</span> ลบรายการที่เลือก
+             </button>
+             <div style="width: 1px; height: 32px; background: rgba(0,0,0,0.1); margin: auto 0;"></div>
+             
              <div class="dropdown">
                 <button class="dropbtn" onclick="toggleDropdown('status-dd', event)" style="color: var(--text-main); border-color: var(--border);">
                     <span class="material-icons-round">edit_note</span> เปลี่ยนสถานะ <span class="material-icons-round">expand_more</span>
@@ -841,12 +899,12 @@
             <thead>
                 <tr>
                 <th class="col-checkbox" style="width: 40px;"><input type="checkbox" id="check-all" onclick="toggleSelectAll()" style="cursor: pointer;"></th>
-                <th style="width:140px; text-align: left; padding-left: 24px;">Order ID</th>
-                <th style="width:200px; text-align: left;">ลูกค้า / วันที่</th>
-                <th style="text-align: left;">รายการสินค้า</th>
-                <th style="width:120px; text-align: right; padding-right: 24px;">ยอดสุทธิ</th>
-                <th style="width:100px; text-align: center;">สถานะ</th>
-                <th style="width:100px; text-align: center;">จัดการ</th>
+                <th style="width:140px;">Order ID</th>
+                <th style="width:200px;">ลูกค้า / วันที่</th>
+                <th>รายการสินค้า</th>
+                <th style="width:120px;" class="text-end">ยอดสุทธิ</th>
+                <th style="width:100px;" class="text-center">สถานะ</th>
+                <th style="width:100px;" class="text-center">จัดการ</th>
                 </tr>
             </thead>
             <tbody id="order-list-body"></tbody>
@@ -1592,30 +1650,36 @@
 
         // Imported Badge
         const isImported = o.order_source === 'imported';
-        const badgeHtml = isImported ? '<span class="badge badge-Imported" style="font-size:10px; margin-left:4px;">IMP</span>' : '';
+        const badgeHtml = isImported ? '<span class="badge badge-Imported" style="font-size:9px; margin-left:4px; padding:2px 6px;">IMP</span>' : '';
         
         // Actions Logic (Same logic, new style)
         const isLocked = isImported; // Imported orders are read-only
+        
+        // Row Classes for Visual Hierarchy
+        const rowClass = o.status === 'New' ? 'is-new' : (o.status === 'Shipped' ? 'is-shipped' : '');
 
         return `
-        <tr>
+        <tr class="order-row ${rowClass}">
             <td class="col-checkbox"><input type="checkbox" class="order-checkbox" value="${o.id}" onchange="updateBulk()"></td>
             <td>
-                <div class="font-mono fw-bold text-dark" style="font-size:15px;">${o.id}</div>
+                <div class="font-mono order-id-text" style="font-size:14px; font-weight:700;">${o.id}</div>
                 ${badgeHtml}
             </td>
             <td>
-                <div class="fw-bold text-dark" style="margin-bottom:2px;">${o.name}</div>
-                <div class="text-secondary text-xs"><span class="material-icons-round" style="font-size:12px; vertical-align:middle; margin-right:2px;">event</span>${safeDate(o.date, true)}</div>
+                <div class="fw-bold" style="font-size:14px; margin-bottom:2px;">${o.name}</div>
+                <div style="font-size:11px; color:#94a3b8; display:flex; align-items:center;">
+                    <span class="material-icons-round" style="font-size:12px; margin-right:2px;">event</span>
+                    ${safeDate(o.date, true)}
+                </div>
             </td>
             <td>
                 ${itemsHtml}
             </td>
             <td class="text-end">
-                <div class="fw-bold text-dark" style="font-size:15px;">฿${(Number(o.total)||0).toLocaleString()}</div>
+                <div class="fw-bold" style="font-size:14px;">฿${(Number(o.total)||0).toLocaleString()}</div>
             </td>
             <td style="text-align:center;">
-                <span class="badge badge-${o.status}" style="font-size:10px; font-weight:700;">${o.status}</span>
+                <span class="badge badge-${o.status}">${o.status}</span>
             </td>
             <td style="text-align:center;">
                 <div style="display:flex; justify-content:center; gap:2px;">
@@ -1911,39 +1975,333 @@
         }
     }
 
-    // --- Form Helpers ---
-    function addFormRow() {
-      const div = document.createElement('div');
-      div.className = 'item-list-row';
-      div.innerHTML = `<input type="text" class="form-control item-name" list="prod-list" placeholder="สินค้า" onchange="syncRow(this)"><input type="text" class="form-control item-sku" placeholder="SKU"><input type="number" class="form-control item-qty" value="1" onchange="calcTotal()"><input type="number" class="form-control item-price" placeholder="ราคา" onchange="calcTotal()"><button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); calcTotal()">✕</button><datalist id="prod-list">${db.products.map(p => `<option value="${p.name}">${p.sku}</option>`).join('')}</datalist>`;
-      document.getElementById('form-items-container').appendChild(div);
+    // --- Modals & Printing ---
+    function closeModal(e, force=false) {
+        if(force || e.target.classList.contains('modal-overlay')) {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+        }
     }
 
-    function syncRow(el) {
-      const p = db.products.find(x => x.name === el.value);
-      if(p) { const row = el.parentElement; row.querySelector('.item-sku').value = p.sku; row.querySelector('.item-price').value = p.price; calcTotal(); }
+    function openDetail(id) {
+        const order = db.orders.find(o => o.id === id);
+        if(!order) return;
+        document.getElementById('detail-dynamic-content').innerHTML = `
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:12px;"><span class="material-icons-round" style="color:var(--primary); font-size:32px;">receipt_long</span><div><h2 style="margin:0; font-size:20px;">ออเดอร์ ${order.id}</h2><div style="font-size:12px; color:var(--text-muted);">${safeDate(order.date, true)}</div></div></div>
+                <span class="badge badge-${order.status}" style="padding: 6px 12px; font-size:12px;"><span class="material-icons-round" style="font-size:14px;">fiber_manual_record</span> ${order.status}</span>
+            </div>
+            <div class="modal-body">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px;">
+                    <div style="background:#f8fafc; padding:16px; border-radius:12px; border:1px solid #e2e8f0;"><div style="font-weight:700; color:var(--primary); font-size:13px; margin-bottom:8px; display:flex; align-items:center; gap:6px;"><span class="material-icons-round" style="font-size:18px;">person</span> ข้อมูลลูกค้า</div><div style="font-weight:600; font-size:15px; margin-bottom:2px;">${order.name}</div><div style="font-size:13px; color:#4a5568; margin-bottom:8px;">โทร. ${order.phone}</div><div style="font-size:12px; color:#718096; white-space: pre-line; line-height:1.5; border-top:1px dashed #cbd5e0; padding-top:8px; margin-top:8px;">${order.address}</div></div>
+                    <div style="background:#f8fafc; padding:16px; border-radius:12px; border:1px solid #e2e8f0;"><div style="font-weight:700; color:var(--primary); font-size:13px; margin-bottom:8px; display:flex; align-items:center; gap:6px;"><span class="material-icons-round" style="font-size:18px;">local_shipping</span> ข้อมูลการจัดส่ง</div><table style="width:100%; font-size:13px; border-collapse:separate; border-spacing:0 6px;"><tr><td style="color:var(--text-muted);">ช่องทาง:</td><td align="right" style="font-weight:600;">${order.channel || '-'}</td></tr><tr><td style="color:var(--text-muted);">การชำระเงิน:</td><td align="right" style="font-weight:600;">${order.payment || '-'}</td></tr><tr><td style="color:var(--text-muted);">สถานะปัจจุบัน:</td><td align="right" style="font-weight:600; color:var(--primary);">${order.status}</td></tr></table></div>
+                </div>
+                <div style="border:1px solid var(--border); border-radius:12px; overflow:hidden;"><table style="font-size:13px;"><thead style="background:#f9fafb;"><tr><th style="padding:10px 16px; width:40px; text-align:center;">#</th><th style="padding:10px 16px;">รายการสินค้า</th><th style="padding:10px 16px; width:60px; text-align:center;">จำนวน</th><th style="padding:10px 16px; width:100px; text-align:right;">ยอดรวม</th></tr></thead><tbody>${(order.items || []).map((i, idx) => `<tr><td align="center" style="color:var(--text-muted);">${idx + 1}</td><td><div style="font-weight:600;">${i.name}</div><div style="font-size:11px; color:var(--text-muted);">SKU: ${i.sku || '-'}</div></td><td align="center">x ${i.qty}</td><td align="right" style="font-weight:600;">฿${(i.qty * i.price).toLocaleString()}</td></tr>`).join('')}</tbody></table></div>
+                <div style="display:flex; justify-content:flex-end; margin-top:20px;"><div style="width:250px;"><div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:13px; color:var(--text-muted);"><span>ยอดรวม (Subtotal)</span><span>฿${(Number(order.subtotal) || Number(order.total)).toLocaleString()}</span></div><div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:13px; color:var(--danger-text);"><span>ส่วนลด (Discount)</span><span>-฿${(Number(order.discount) || 0).toLocaleString()}</span></div><div style="display:flex; justify-content:space-between; padding-top:12px; border-top:2px solid var(--border); font-size:18px; font-weight:800; color:var(--primary);"><span>ยอดสุทธิ</span><span>฿${(Number(order.total) || 0).toLocaleString()}</span></div></div></div>
+            </div>
+            <div class="modal-footer"><div style="margin-right:auto;"><button class="btn btn-outline btn-sm" onclick="printFromDetail('withdrawal')" title="พิมพ์ใบเบิก"><span class="material-icons-round" style="font-size:18px;">inventory</span></button><button class="btn btn-outline btn-sm" onclick="printFromDetail('quotation')" title="พิมพ์ใบเสนอราคา"><span class="material-icons-round" style="font-size:18px;">description</span></button><button class="btn btn-outline btn-sm" onclick="printFromDetail('invoice')" title="พิมพ์ใบเสร็จ"><span class="material-icons-round" style="font-size:18px;">receipt</span></button></div><button class="btn btn-primary" onclick="closeModal(null, true)">ปิดหน้าต่าง</button></div>
+        `;
+        document.getElementById('detail-modal').classList.remove('hidden');
     }
 
-    function calcTotal() {
-      let subtotal = 0;
-      document.querySelectorAll('.item-list-row').forEach(row => { subtotal += (parseFloat(row.querySelector('.item-qty').value) || 0) * (parseFloat(row.querySelector('.item-price').value) || 0); });
-      const discInput = parseFloat(document.getElementById('form-discount-input').value) || 0;
-      const total = subtotal - (document.getElementById('form-discount-type').value === 'Percent' ? subtotal * (discInput / 100) : discInput);
-      document.getElementById('form-subtotal').innerText = subtotal.toLocaleString();
-      document.getElementById('form-total').innerText = total.toLocaleString();
+    function printFromDetail(type) {
+        const idText = document.querySelector('.modal-header h2').innerText;
+        const id = idText.replace('ออเดอร์ ', '');
+        const order = db.orders.find(o => o.id === id);
+        if (order) { 
+            const wrapperClass = type === 'withdrawal' ? 'print-withdrawal-item' : 'print-page';
+            document.getElementById('printable-area').innerHTML = `<div class="${wrapperClass}">${generateCorporateHtml(order, type)}</div>`; 
+            setTimeout(() => { window.print(); document.getElementById('printable-area').innerHTML = ''; }, 500); 
+        }
     }
 
-    function autoFillCust() { 
-      const ph = document.getElementById('in-phone').value; 
-      const found = db.orders.find(o => o.phone === ph); 
-      if(found) { 
-        document.getElementById('in-name').value = found.name; 
-        document.getElementById('in-address').value = found.address; 
-        showToast("ดึงข้อมูลลูกค้าเดิมแล้ว"); 
-      } 
+    function bulkPrint(type) {
+        const selectedIds = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(c => c.value);
+        if (selectedIds.length === 0) return;
+        
+        let allHtml = '';
+        if (type === 'combined_withdrawal') {
+            allHtml = generateCombinedWithdrawalHtml(selectedIds);
+        } else {
+            const wrapperClass = type === 'withdrawal' ? 'print-withdrawal-item' : 'print-page';
+            selectedIds.forEach(id => {
+                const order = db.orders.find(o => o.id === id);
+                if (order) allHtml += `<div class="${wrapperClass}">${generateCorporateHtml(order, type)}</div>`;
+            });
+        }
+        
+        document.getElementById('printable-area').innerHTML = allHtml;
+        setTimeout(() => { window.print(); document.getElementById('printable-area').innerHTML = ''; }, 500);
+    }
+    
+    async function bulkUpdateStatus(status) {
+        const selectedIds = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(c => c.value);
+        if (selectedIds.length === 0) return;
+        
+        if(!confirm(`ยืนยันเปลี่ยนสถานะ ${selectedIds.length} รายการเป็น "${status}"?`)) return;
+
+        showToast("กำลังอัปเดตสถานะ...", 0);
+        
+        let updatedCount = 0;
+        const updates = [];
+        
+        db.orders.forEach(o => {
+            if(selectedIds.includes(o.id)) {
+                o.status = status;
+                updatedCount++;
+                updates.push(o);
+            }
+        });
+        
+        save();
+        renderOrders();
+        renderDashboard();
+        updateBulk(); 
+        
+        showToast(`อัปเดต ${updatedCount} รายการเรียบร้อย`, 2000);
+        
+        for (const o of updates) {
+           try {
+               await fetch(SCRIPT_URL, { 
+                   method: 'POST', 
+                   mode: 'no-cors', 
+                   headers: { 'Content-Type': 'application/json' }, 
+                   body: JSON.stringify({ action: 'updateStatus', id: o.id, status: status }) 
+               });
+           } catch(e) { console.error("Sync error:", e); }
+        }
     }
 
-    // --- Packing Logic ---
+    // --- New Bulk Delete Function (UI Interaction) ---
+    async function bulkDelete() {
+        const selectedIds = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(c => c.value);
+        if (selectedIds.length === 0) return;
+
+        // UI Confirmation
+        if(!confirm(`⚠️ คำเตือน: คุณกำลังจะลบออเดอร์จำนวน ${selectedIds.length} รายการ\n\nการกระทำนี้ไม่สามารถย้อนกลับได้ คุณแน่ใจหรือไม่?`)) return;
+
+        showToast("กำลังลบรายการ...", 0);
+
+        // UI Optimistic Update (Simulate Deletion)
+        db.orders = db.orders.filter(o => !selectedIds.includes(o.id));
+        
+        save();
+        renderOrders();
+        renderDashboard();
+        updateBulk(); // Hide the bar
+
+        showToast(`ลบ ${selectedIds.length} รายการเรียบร้อย`, 2000);
+        
+        // Background Sync (Existing Logic Pattern)
+        for (const id of selectedIds) {
+           try {
+               await fetch(SCRIPT_URL, { 
+                   method: 'POST', 
+                   mode: 'no-cors', 
+                   headers: { 'Content-Type': 'application/json' }, 
+                   body: JSON.stringify({ action: 'delete', id: id }) 
+               });
+           } catch(e) { console.error("Sync error:", e); }
+        }
+    }
+
+    // --- HTML Generators ---
+    function generateCombinedWithdrawalHtml(ids) {
+        const summary = {};
+        ids.forEach(id => {
+            const order = db.orders.find(o => o.id === id);
+            if (order && order.items) {
+                order.items.forEach(item => {
+                    const key = item.sku || item.name;
+                    if (!summary[key]) {
+                        summary[key] = { name: item.name, sku: item.sku, qty: 0 };
+                    }
+                    summary[key].qty += Number(item.qty);
+                });
+            }
+        });
+
+        const rows = Object.values(summary).map((i, idx) => `
+            <tr>
+              <td style="text-align:center; border: 1px solid #333; padding: 10px;">${idx + 1}</td>
+              <td style="border: 1px solid #333; padding: 10px;">${i.name}<br><small style="color:#666">SKU: ${i.sku || '-'}</small></td>
+              <td style="text-align:center; border: 1px solid #333; padding: 10px; font-weight: 800; font-size: 18px; color: var(--primary);">${i.qty}</td>
+              <td style="border: 1px solid #333; padding: 10px; text-align: center; font-size: 16px;">[ &nbsp;&nbsp; ]</td>
+            </tr>
+        `).join('');
+
+        return `
+            <div style="padding:40px; font-family:'Sarabun', sans-serif; color: #000; line-height: 1.4; background:#fff;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 3px solid var(--primary); padding-bottom: 15px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                  <img src="${COMPANY_INFO.logo}" style="height:50px;">
+                  <div>
+                    <div style="font-weight:800; font-size:18px; color: var(--primary);">${COMPANY_INFO.name}</div>
+                    <div style="font-size: 12px; color:#666;">สรุปรายการเบิกสินค้าทั้งหมด (Summary Pick List)</div>
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:12px; font-weight:700;">วันที่ออกเอกสาร: ${new Date().toLocaleDateString('th-TH')}</div>
+                  <div style="font-size:12px; color:#666;">จำนวนออเดอร์ที่รวม: ${ids.length} รายการ</div>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 20px; font-size: 14px; font-weight: 700; color: #333;">รายการที่ต้องเตรียมทั้งหมด:</div>
+              
+              <table style="width:100%; border-collapse:collapse; margin-bottom:30px; font-size: 14px;">
+                <thead>
+                  <tr style="background:var(--primary); color: #fff;">
+                    <th style="border: 1px solid #333; padding: 12px; width: 60px; text-align: center;">No.</th>
+                    <th style="border: 1px solid #333; padding: 12px; text-align: left;">ชื่อสินค้า / SKU</th>
+                    <th style="border: 1px solid #333; padding: 12px; width: 100px; text-align: center;">จำนวนรวม</th>
+                    <th style="border: 1px solid #333; padding: 12px; width: 100px; text-align: center;">Check</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+
+              <div style="background: #f8fafc; border: 1px dashed #cbd5e0; padding: 20px; border-radius: 8px; font-size: 12px; margin-top: 50px;">
+                <b>หมายเหตุ:</b> รายการนี้เป็นการรวมยอดจากหลายออเดอร์เพื่อให้คลังสินค้าหยิบของได้รวดเร็ว กรุณาใช้ประกอบกับใบเบิกแยกรายการเพื่อแพ็คสินค้าลงกล่องให้ถูกต้อง
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; margin-top: 80px; text-align: center; font-size: 13px;">
+                <div><div style="border-bottom: 1px solid #000; margin-bottom: 10px; height: 40px;"></div><div style="font-weight: 700;">เจ้าหน้าที่คลังสินค้า (ผู้จัดของ)</div></div>
+                <div><div style="border-bottom: 1px solid #000; margin-bottom: 10px; height: 40px;"></div><div style="font-weight: 700;">เจ้าหน้าที่ตรวจสอบ (QC)</div></div>
+              </div>
+            </div>
+        `;
+    }
+
+    function generateCorporateHtml(order, type) {
+        const isWithdrawal = type === 'withdrawal';
+        const isQuotation = type === 'quotation';
+        let docTitle = isQuotation ? 'ใบเสนอราคา<br><small style="font-size: 12px; color: #666;">QUOTATION</small>' : 'ใบแจ้งหนี้ / ใบเสร็จรับเงิน<br><small style="font-size: 12px; color: #666;">INVOICE / RECEIPT</small>';
+        if (isWithdrawal) docTitle = 'ใบเบิกสินค้า / PICK LIST';
+
+        if (isWithdrawal) {
+          const itemsRows = (order.items || []).map((i, idx) => `
+              <tr>
+                <td style="text-align:center; border: 1px solid #333; padding: 6px;">${idx + 1}</td>
+                <td style="border: 1px solid #333; padding: 6px;">${i.name}<br><small style="color:#666">SKU: ${i.sku || '-'}</small></td>
+                <td style="text-align:center; border: 1px solid #333; padding: 6px; font-weight: bold; font-size: 15px; color: var(--primary);">${Number(i.qty).toFixed(0)}</td>
+                <td style="border: 1px solid #333; padding: 6px; text-align: center;">[ &nbsp;&nbsp; ]</td>
+              </tr>
+          `).join('');
+
+          return `
+            <div style="padding:10mm 20mm; font-family:'Sarabun', sans-serif; color: #000; line-height: 1.3; flex-grow: 1;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4mm; border-bottom: 1px solid #eee; padding-bottom: 2mm;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <img src="${COMPANY_INFO.logo}" style="height:30px;">
+                  <div>
+                    <div style="font-weight:700; font-size:12px;">${COMPANY_INFO.name}</div>
+                    <div style="font-size: 9px; color:#666;">Tax ID: ${COMPANY_INFO.taxId} | Tel: ${COMPANY_INFO.tel}</div>
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:15px; font-weight:800; color:var(--primary); text-transform: uppercase; margin-bottom: 2px;">${docTitle}</div>
+                  <div style="font-size: 10px; font-weight:700;">ID: ${order.id} | วันที่: ${safeDate(order.date)}</div>
+                </div>
+              </div>
+              <div style="background: #f9fafb; padding: 3mm; border-radius: 4px; margin-bottom: 4mm; font-size: 10px; line-height: 1.4; border: 1px solid #eee;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 1mm; margin-bottom: 1mm;">
+                  <div><b>ลูกค้า:</b> ${order.name} (${order.phone})</div>
+                  <div style="text-align:right;"><b>ช่องทาง:</b> ${order.channel || '-'}</div>
+                </div>
+                <div style="color: #444; white-space: pre-line;"><b>ที่อยู่จัดส่ง:</b> ${order.address}</div>
+              </div>
+              <table style="width:100%; border-collapse:collapse; margin-bottom:5mm; font-size: 10px;">
+                <thead>
+                  <tr style="background:#f2f2f2; color: #333;">
+                    <th style="border: 1px solid #333; padding: 6px; width: 35px; text-align: center;">No.</th>
+                    <th style="border: 1px solid #333; padding: 6px; text-align: left;">รายการสินค้า</th>
+                    <th style="border: 1px solid #333; padding: 6px; width: 55px; text-align: center;">จำนวน</th>
+                    <th style="border: 1px solid #333; padding: 6px; width: 60px; text-align: center;">Check</th>
+                  </tr>
+                </thead>
+                <tbody>${itemsRows}</tbody>
+              </table>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; text-align: center; font-size: 9px; margin-top: auto; padding-bottom: 5mm;">
+                <div><div style="border-bottom: 1px solid #000; height: 12px; margin-bottom: 3px;"></div><div style="font-weight: 700;">ผู้เบิกของ (Picker)</div></div>
+                <div><div style="border-bottom: 1px solid #000; height: 12px; margin-bottom: 3px;"></div><div style="font-weight: 700;">QC / ตรวจสอบ</div></div>
+                <div><div style="border-bottom: 1px solid #000; height: 12px; margin-bottom: 3px;"></div><div style="font-weight: 700;">ผู้จ่ายของ (Warehouse)</div></div>
+              </div>
+            </div>
+          `;
+        } else {
+          const itemsRows = (order.items || []).map((i, idx) => `
+              <tr>
+                <td style="text-align:center; border: 1px solid #333; padding: 10px;">${idx + 1}</td>
+                <td style="border: 1px solid #333; padding: 10px;">${i.name}<br><small style="color:#666">SKU: ${i.sku || '-'}</small></td>
+                <td style="text-align:center; border: 1px solid #333; padding: 10px;">${Number(i.qty).toFixed(2)}</td>
+                <td style="text-align:right; border: 1px solid #333; padding: 10px;">${Number(i.price).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                <td style="text-align:right; border: 1px solid #333; padding: 10px;">${(i.qty * i.price).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+              </tr>
+          `).join('');
+
+          return `
+            <div style="padding:50px; font-family:'Sarabun', sans-serif; color: #000; line-height: 1.4; background:#fff;">
+              <div style="display: grid; grid-template-columns: 1.8fr 1fr; gap: 40px; margin-bottom: 30px;">
+                <div>
+                  <div style="margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+                    <img src="${COMPANY_INFO.logo}" style="height:55px; margin-bottom:12px; display: block;">
+                    <div style="font-weight:700; font-size:16px; margin-bottom: 4px;">${COMPANY_INFO.name}</div>
+                    <div style="font-size: 12px; color:#333;">${COMPANY_INFO.address}</div>
+                    <div style="font-size: 12px; margin-top: 6px;">TEL: ${COMPANY_INFO.tel} | Tax ID: ${COMPANY_INFO.taxId}</div>
+                  </div>
+                  <div style="font-size: 12px;">
+                    <div style="font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 6px; font-size: 11px;">ลูกค้า / Customer (Bill To)</div>
+                    <div style="font-weight:700; font-size:15px; margin-bottom: 4px;">${order.name}</div>
+                    <div style="color:#333; white-space: pre-line;">${order.address}</div>
+                    <div style="margin-top: 5px; font-weight: 600;">โทร. ${order.phone}</div>
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:22px; font-weight:800; color:#000; margin-bottom: 20px; text-transform: uppercase;">${docTitle}</div>
+                  <table style="width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 15px;">
+                    <tr><td align="right" style="padding: 4px 10px; color:#666;">เลขที่ / No.</td><td align="right" style="padding: 4px 0; font-weight:700;">${order.id}</td></tr>
+                    <tr><td align="right" style="padding: 4px 10px; color:#666;">วันที่ / Date</td><td align="right" style="padding: 4px 0; font-weight:700;">${safeDate(order.date)}</td></tr>
+                    <tr><td align="right" style="padding: 4px 10px; color:#666;">การชำระเงิน / Terms</td><td align="right" style="padding: 4px 0; font-weight:700;">${order.payment || 'โอนเงิน'}</td></tr>
+                  </table>
+                </div>
+              </div>
+              <div style="border-top: 3px solid #000; margin-bottom: 20px;"></div>
+              <table style="width:100%; border-collapse:collapse; margin-bottom:30px; font-size: 13px;">
+                <thead>
+                  <tr style="background:#f8fafc;">
+                    <th style="border: 1px solid #333; padding: 12px 8px; width: 50px; text-align: center;">No.</th>
+                    <th style="border: 1px solid #333; padding: 12px 8px; text-align: left;">รายการสินค้า (Descriptions)</th>
+                    <th style="border: 1px solid #333; padding: 12px 8px; width: 80px; text-align: center;">จำนวน</th>
+                    <th style="border: 1px solid #333; padding: 12px 8px; width: 110px; text-align: right;">หน่วยละ</th>
+                    <th style="border: 1px solid #333; padding: 12px 8px; width: 130px; text-align: right;">จำนวนเงิน</th>
+                  </tr>
+                </thead>
+                <tbody>${itemsRows}</tbody>
+              </table>
+              <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 50px;">
+                <div style="font-size: 11px;">
+                  <div style="font-weight: 700; margin-bottom: 8px;">หมายเหตุ / Remark:</div>
+                  <div style="border: 1px solid #eee; padding: 15px; min-height: 100px; color: #444; border-radius: 6px; line-height: 1.6;">
+                    1. ราคานี้รวมภาษีมูลค่าเพิ่มแล้ว (ถ้ามี)<br>2. กำหนดยืนราคา 30 วันนับจากวันที่เสนอราคา<br>3. สินค้าซื้อแล้วไม่รับเปลี่ยนหรือคืน
+                  </div>
+                </div>
+                <div style="font-size: 13px;">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 8px 0;">Gross Amount</td><td align="right" style="font-weight: 700;">฿${(Number(order.subtotal) || Number(order.total)).toLocaleString()}</td></tr>
+                    <tr style="color: #ef4444;"><td style="padding: 8px 0;">Less Discount</td><td align="right" style="font-weight: 700;">-฿${(Number(order.discount) || 0).toLocaleString()}</td></tr>
+                    <tr style="border-top: 2px solid #000; font-weight: 800; font-size: 16px;"><td style="padding: 15px 0;">Grand Total</td><td align="right" style="padding: 15px 0; color: var(--primary);">฿${Number(order.total).toLocaleString()}</td></tr>
+                  </table>
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 100px; margin-top: 80px; text-align: center; font-size: 12px;">
+                <div><div style="border-bottom: 1px solid #000; margin-bottom: 10px; height: 40px;"></div><div style="font-weight: 700;">ผู้อนุมัติสั่งซื้อ / Authorized By</div></div>
+                <div><div style="border-bottom: 1px solid #000; margin-bottom: 10px; height: 40px;"></div><div style="font-weight: 700;">ผู้เสนอราคา / Sale Person</div></div>
+              </div>
+            </div>
+          `;
+        }
+    }
+
+    // --- Packing Logic (Refined) ---
     function renderPacking() {
         const p = db.orders.filter(o => o.status === 'Paid');
         document.getElementById('pack-queue-count').innerText = p.length;
@@ -2106,84 +2464,67 @@
       } catch(e) { console.error(e); }
     }
 
-    // --- Product Import & Edit Logic ---
-    function triggerImport() {
-        document.getElementById('import-file').click();
+    // --- Dropdown Toggle Logic ---
+    function toggleDropdown(id, event) {
+        event.stopPropagation();
+        const el = document.getElementById(id);
+        const isShown = el.classList.contains('show');
+        
+        // Close all first
+        document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+        
+        // Toggle target
+        if (!isShown) el.classList.add('show');
     }
 
-    function handleImportCSV(input) {
-        const file = input.files[0];
-        if (!file) return;
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.dropdown')) {
+            document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+        }
+    });
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const text = e.target.result;
-            const lines = text.split('\n');
-            let addedCount = 0;
-            
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-                
-                const parts = line.split(',');
-                if (parts.length >= 3) {
-                    const sku = parts[0].trim();
-                    const name = parts[1].trim();
-                    const price = parseFloat(parts[2].trim()) || 0;
-                    const barcode = parts[3] ? parts[3].trim() : '';
-                    const image = parts[4] ? parts[4].trim() : '';
-                    
-                    if (sku && name) {
-                        const idx = db.products.findIndex(p => p.sku === sku);
-                        const newProd = { sku, name, price, barcode, image };
-                        
-                        if (idx >= 0) {
-                            db.products[idx] = newProd; 
-                        } else {
-                            db.products.push(newProd); 
-                        }
-                        addedCount++;
-                    }
-                }
+    // --- Helper Functions for Image Source ---
+    function setImgMode(mode) {
+        document.getElementById('mode-url').classList.add('hidden');
+        document.getElementById('mode-upload').classList.add('hidden');
+        document.getElementById('mode-drive').classList.add('hidden');
+        
+        document.getElementById('mode-' + mode).classList.remove('hidden');
+    }
+
+    function readUpload(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            if (file.size > 500000) { // 500KB limit warning
+                alert("ไฟล์มีขนาดใหญ่เกิน 500KB อาจทำให้ระบบช้าลง");
             }
-            
-            save();
-            renderProducts();
-            showToast(`Import สำเร็จ ${addedCount} รายการ`, 2000);
-            input.value = ''; 
-        };
-        reader.readAsText(file);
-    }
-
-    function openProductModal(editSku = null) {
-        document.getElementById('product-modal').classList.remove('hidden');
-        if (editSku) {
-            const p = db.products.find(x => x.sku === editSku);
-            if (!p) return;
-            document.getElementById('product-modal-title').innerText = "แก้ไขสินค้า";
-            document.getElementById('p-mode').value = "edit";
-            document.getElementById('p-sku').value = p.sku;
-            document.getElementById('p-sku').disabled = true; 
-            document.getElementById('p-name').value = p.name;
-            document.getElementById('p-price').value = p.price;
-            document.getElementById('p-barcode').value = p.barcode || '';
-            document.getElementById('p-image').value = p.image || ''; 
-            setImgMode('url');
-            previewImage(p.image || '');
-        } else {
-            document.getElementById('product-modal-title').innerText = "เพิ่มสินค้าใหม่";
-            document.getElementById('p-mode').value = "add";
-            document.getElementById('p-sku').value = "";
-            document.getElementById('p-sku').disabled = false;
-            document.getElementById('p-name').value = "";
-            document.getElementById('p-price').value = "";
-            document.getElementById('p-barcode').value = "";
-            document.getElementById('p-image').value = "";
-            setImgMode('url');
-            previewImage('');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Update the main hidden/visible input used by save logic
+                document.getElementById('p-image').value = e.target.result; 
+                previewImage(e.target.result);
+            }
+            reader.readAsDataURL(file);
         }
     }
-    
+
+    function readDrive(link) {
+        let fileId = "";
+        const regExp = /\/d\/([a-zA-Z0-9_-]+)/;
+        const match = link.match(regExp);
+        
+        if (match && match[1]) {
+            fileId = match[1];
+            const viewLink = `https://drive.google.com/uc?export=view&id=${fileId}`;
+            document.getElementById('p-image').value = viewLink;
+            previewImage(viewLink);
+        } else {
+            document.getElementById('p-image').value = link;
+            previewImage(link);
+        }
+    }
+
     // --- Barcode Modal Logic ---
     function openBarcodeModal(sku) {
         const p = db.products.find(x => x.sku === sku);
@@ -2341,47 +2682,6 @@
         renderHistory();
         if(!isAuto) showToast("อัปเดตข้อมูลแล้ว", 2000);
       } catch(e) { if(!isAuto) showToast("ไม่สามารถดึงข้อมูลได้", 3000); }
-    }
-
-    // --- Helper Functions for Image Source ---
-    function setImgMode(mode) {
-        document.getElementById('mode-url').classList.add('hidden');
-        document.getElementById('mode-upload').classList.add('hidden');
-        document.getElementById('mode-drive').classList.add('hidden');
-        
-        document.getElementById('mode-' + mode).classList.remove('hidden');
-    }
-
-    function readUpload(input) {
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-            if (file.size > 500000) { // 500KB limit warning
-                alert("ไฟล์มีขนาดใหญ่เกิน 500KB อาจทำให้ระบบช้าลง");
-            }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                // Update the main hidden/visible input used by save logic
-                document.getElementById('p-image').value = e.target.result; 
-                previewImage(e.target.result);
-            }
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function readDrive(link) {
-        let fileId = "";
-        const regExp = /\/d\/([a-zA-Z0-9_-]+)/;
-        const match = link.match(regExp);
-        
-        if (match && match[1]) {
-            fileId = match[1];
-            const viewLink = `https://drive.google.com/uc?export=view&id=${fileId}`;
-            document.getElementById('p-image').value = viewLink;
-            previewImage(viewLink);
-        } else {
-            document.getElementById('p-image').value = link;
-            previewImage(link);
-        }
     }
 
     // --- Boot ---
