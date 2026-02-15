@@ -887,10 +887,10 @@
           </div>
           
           <div style="display: flex; gap: 10px;">
-              <input type="file" id="import-file" hidden onchange="handleImportCSV(this)" accept=".csv">
+              <input type="file" id="import-file" hidden onchange="handleImportCSV(this)" accept=".csv, .xlsx, .xls">
               <!-- New Button Here -->
               <button class="btn btn-soft-danger" onclick="deleteAllProducts()"><span class="material-icons-round">delete_forever</span> ล้างคลัง</button>
-              <button class="btn btn-outline" onclick="triggerImport()"><span class="material-icons-round">upload_file</span> Import CSV</button>
+              <button class="btn btn-outline" onclick="triggerImport()"><span class="material-icons-round">upload_file</span> Import Excel/CSV</button>
               <button class="btn btn-primary" onclick="openProductModal()"><span class="material-icons-round">add</span> เพิ่มสินค้า</button>
           </div>
       </div>
@@ -2256,33 +2256,37 @@
 
         const reader = new FileReader();
         reader.onload = function(e) {
-            const text = e.target.result;
-            const lines = text.split('\n');
+            const data = e.target.result;
+            // Use SheetJS to read both CSV and Excel
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            
             let addedCount = 0;
             
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
+            // Start from index 1 to skip header
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || row.length === 0) continue;
                 
-                const parts = line.split(',');
-                if (parts.length >= 3) {
-                    const sku = parts[0].trim();
-                    const name = parts[1].trim();
-                    const price = parseFloat(parts[2].trim()) || 0;
-                    const barcode = parts[3] ? parts[3].trim() : '';
-                    const image = parts[4] ? parts[4].trim() : '';
+                // Adjust indices based on expected format: SKU, Name, Price, Barcode, Image
+                
+                const sku = row[0] ? String(row[0]).trim() : '';
+                const name = row[1] ? String(row[1]).trim() : '';
+                const price = parseFloat(row[2]) || 0;
+                const barcode = row[3] ? String(row[3]).trim() : '';
+                const image = row[4] ? String(row[4]).trim() : '';
+                
+                if (sku && name) {
+                    const idx = db.products.findIndex(p => p.sku === sku);
+                    const newProd = { sku, name, price, barcode, image };
                     
-                    if (sku && name) {
-                        const idx = db.products.findIndex(p => p.sku === sku);
-                        const newProd = { sku, name, price, barcode, image };
-                        
-                        if (idx >= 0) {
-                            db.products[idx] = newProd; 
-                        } else {
-                            db.products.push(newProd); 
-                        }
-                        addedCount++;
+                    if (idx >= 0) {
+                        db.products[idx] = newProd; 
+                    } else {
+                        db.products.push(newProd); 
                     }
+                    addedCount++;
                 }
             }
             
@@ -2291,7 +2295,7 @@
             showToast(`Import สำเร็จ ${addedCount} รายการ`, 2000);
             input.value = ''; 
         };
-        reader.readAsText(file);
+        reader.readAsBinaryString(file);
     }
 
     function openProductModal(editSku = null) {
@@ -2698,4 +2702,3 @@
   </script>
 </body>
 </html>
-
