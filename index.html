@@ -833,13 +833,13 @@
             <span class="material-icons-round">check_circle</span> เลือกแล้ว <span id="selected-count" style="font-size: 18px;">0</span> รายการ
           </div>
           <div style="display:flex; gap:10px;">
-             <!-- Delete Button (New Design) -->
-             <button class="btn btn-soft-danger" onclick="bulkDelete()" style="margin-right: 12px;">
+              <!-- Delete Button (New Design) -->
+              <button class="btn btn-soft-danger" onclick="bulkDelete()" style="margin-right: 12px;">
                 <span class="material-icons-round">delete</span> ลบรายการที่เลือก
-             </button>
-             <div style="width: 1px; height: 32px; background: rgba(0,0,0,0.1); margin: auto 0;"></div>
-             
-             <div class="dropdown">
+              </button>
+              <div style="width: 1px; height: 32px; background: rgba(0,0,0,0.1); margin: auto 0;"></div>
+              
+              <div class="dropdown">
                 <button class="dropbtn" onclick="toggleDropdown('status-dd', event)" style="color: var(--text-main); border-color: var(--border);">
                     <span class="material-icons-round">edit_note</span> เปลี่ยนสถานะ <span class="material-icons-round">expand_more</span>
                 </button>
@@ -848,8 +848,8 @@
                     <a onclick="bulkUpdateStatus('Shipped')"><span class="badge badge-Shipped" style="width:10px; height:10px; padding:0; display:inline-block; margin-right:5px;"></span> Shipped (จัดส่งแล้ว)</a>
                     <a onclick="bulkUpdateStatus('New')"><span class="badge badge-New" style="width:10px; height:10px; padding:0; display:inline-block; margin-right:5px;"></span> New (รอชำระ)</a>
                 </div>
-             </div>
-             <div class="dropdown">
+              </div>
+              <div class="dropdown">
                 <button class="dropbtn" onclick="toggleDropdown('print-dd', event)"><span class="material-icons-round">print</span> พิมพ์เอกสาร <span class="material-icons-round">expand_more</span></button>
                 <div id="print-dd" class="dropdown-content">
                   <a onclick="bulkPrint('quotation')"><span class="material-icons-round">description</span> ใบเสนอราคา (Quotation)</a>
@@ -857,7 +857,7 @@
                   <a onclick="bulkPrint('withdrawal')"><span class="material-icons-round">list_alt</span> ใบเบิกแยกรายการ (Individual Slips)</a>
                   <a onclick="bulkPrint('combined_withdrawal')"><span class="material-icons-round">inventory_2</span> ใบเบิกแบบรวมรายการ (Summary)</a>
                 </div>
-             </div>
+              </div>
           </div>
         </div>
         <!-- Filter Section -->
@@ -899,12 +899,12 @@
             <thead>
                 <tr>
                 <th class="col-checkbox" style="width: 40px;"><input type="checkbox" id="check-all" onclick="toggleSelectAll()" style="cursor: pointer;"></th>
-                <th style="width:140px;">Order ID</th>
-                <th style="width:200px;">ลูกค้า / วันที่</th>
-                <th>รายการสินค้า</th>
-                <th style="width:120px;" class="text-end">ยอดสุทธิ</th>
-                <th style="width:100px;" class="text-center">สถานะ</th>
-                <th style="width:100px;" class="text-center">จัดการ</th>
+                <th style="width:140px; text-align: left; padding-left: 24px;">Order ID</th>
+                <th style="width:200px; text-align: left;">ลูกค้า / วันที่</th>
+                <th style="text-align: left;">รายการสินค้า</th>
+                <th style="width:120px; text-align: right; padding-right: 24px;">ยอดสุทธิ</th>
+                <th style="width:100px; text-align: center;">สถานะ</th>
+                <th style="width:100px; text-align: center;">จัดการ</th>
                 </tr>
             </thead>
             <tbody id="order-list-body"></tbody>
@@ -983,6 +983,8 @@
               <div>ชื่อสินค้า</div><div>SKU</div><div>จำนวน</div><div>ราคา/หน่วย</div><div>ลบ</div>
           </div>
           <div id="form-items-container"></div>
+          <datalist id="prod-list"></datalist> <!-- Moved datalist here to prevent duplicates -->
+          
           <div style="display: flex; justify-content: flex-end; margin-top:24px; padding-top:24px; border-top:1px solid var(--border);">
             <div style="width: 300px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--text-muted);">
@@ -1650,36 +1652,30 @@
 
         // Imported Badge
         const isImported = o.order_source === 'imported';
-        const badgeHtml = isImported ? '<span class="badge badge-Imported" style="font-size:9px; margin-left:4px; padding:2px 6px;">IMP</span>' : '';
+        const badgeHtml = isImported ? '<span class="badge badge-Imported" style="font-size:10px; margin-left:4px;">IMP</span>' : '';
         
         // Actions Logic (Same logic, new style)
         const isLocked = isImported; // Imported orders are read-only
-        
-        // Row Classes for Visual Hierarchy
-        const rowClass = o.status === 'New' ? 'is-new' : (o.status === 'Shipped' ? 'is-shipped' : '');
 
         return `
-        <tr class="order-row ${rowClass}">
+        <tr>
             <td class="col-checkbox"><input type="checkbox" class="order-checkbox" value="${o.id}" onchange="updateBulk()"></td>
             <td>
-                <div class="font-mono order-id-text" style="font-size:14px; font-weight:700;">${o.id}</div>
+                <div class="font-mono fw-bold text-dark" style="font-size:15px;">${o.id}</div>
                 ${badgeHtml}
             </td>
             <td>
-                <div class="fw-bold" style="font-size:14px; margin-bottom:2px;">${o.name}</div>
-                <div style="font-size:11px; color:#94a3b8; display:flex; align-items:center;">
-                    <span class="material-icons-round" style="font-size:12px; margin-right:2px;">event</span>
-                    ${safeDate(o.date, true)}
-                </div>
+                <div class="fw-bold text-dark" style="margin-bottom:2px;">${o.name}</div>
+                <div class="text-secondary text-xs"><span class="material-icons-round" style="font-size:12px; vertical-align:middle; margin-right:2px;">event</span>${safeDate(o.date, true)}</div>
             </td>
             <td>
                 ${itemsHtml}
             </td>
             <td class="text-end">
-                <div class="fw-bold" style="font-size:14px;">฿${(Number(o.total)||0).toLocaleString()}</div>
+                <div class="fw-bold text-dark" style="font-size:15px;">฿${(Number(o.total)||0).toLocaleString()}</div>
             </td>
             <td style="text-align:center;">
-                <span class="badge badge-${o.status}">${o.status}</span>
+                <span class="badge badge-${o.status}" style="font-size:10px; font-weight:700;">${o.status}</span>
             </td>
             <td style="text-align:center;">
                 <div style="display:flex; justify-content:center; gap:2px;">
@@ -1874,7 +1870,7 @@
       updateBulk(); 
     }
 
-    // --- Order Import Logic ---
+    // --- Order Import Logic (NEW) ---
     function triggerImportOrder() {
         document.getElementById('import-order-file').click();
     }
@@ -2104,204 +2100,180 @@
         }
     }
 
-    // --- HTML Generators ---
-    function generateCombinedWithdrawalHtml(ids) {
-        const summary = {};
-        ids.forEach(id => {
-            const order = db.orders.find(o => o.id === id);
-            if (order && order.items) {
-                order.items.forEach(item => {
-                    const key = item.sku || item.name;
-                    if (!summary[key]) {
-                        summary[key] = { name: item.name, sku: item.sku, qty: 0 };
-                    }
-                    summary[key].qty += Number(item.qty);
+    // --- Form Helpers ---
+    function addFormRow(data = null) {
+      const div = document.createElement('div');
+      div.className = 'item-list-row';
+      div.innerHTML = `
+        <input type="text" class="form-control item-name" list="prod-list" placeholder="สินค้า" value="${data ? data.name : ''}" onchange="syncRow(this)">
+        <input type="text" class="form-control item-sku" placeholder="SKU" value="${data ? data.sku : ''}">
+        <input type="number" class="form-control item-qty" value="${data ? data.qty : 1}" onchange="calcTotal()">
+        <input type="number" class="form-control item-price" placeholder="ราคา" value="${data ? data.price : ''}" onchange="calcTotal()">
+        <button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); calcTotal()">✕</button>
+      `;
+      document.getElementById('form-items-container').appendChild(div);
+      
+      // Update datalist once
+      updateProductDatalist();
+    }
+
+    function updateProductDatalist() {
+        const list = document.getElementById('prod-list');
+        list.innerHTML = db.products.map(p => `<option value="${p.name}">${p.sku}</option>`).join('');
+    }
+
+    function syncRow(el) {
+      const p = db.products.find(x => x.name === el.value);
+      if(p) { const row = el.parentElement; row.querySelector('.item-sku').value = p.sku; row.querySelector('.item-price').value = p.price; calcTotal(); }
+    }
+
+    function calcTotal() {
+      let subtotal = 0;
+      document.querySelectorAll('.item-list-row').forEach(row => { subtotal += (parseFloat(row.querySelector('.item-qty').value) || 0) * (parseFloat(row.querySelector('.item-price').value) || 0); });
+      const discInput = parseFloat(document.getElementById('form-discount-input').value) || 0;
+      const total = subtotal - (document.getElementById('form-discount-type').value === 'Percent' ? subtotal * (discInput / 100) : discInput);
+      document.getElementById('form-subtotal').innerText = subtotal.toLocaleString();
+      document.getElementById('form-total').innerText = total.toLocaleString();
+    }
+
+    function autoFillCust() { 
+      const ph = document.getElementById('in-phone').value; 
+      const found = db.orders.find(o => o.phone === ph); 
+      if(found) { 
+        document.getElementById('in-name').value = found.name; 
+        document.getElementById('in-address').value = found.address; 
+        showToast("ดึงข้อมูลลูกค้าเดิมแล้ว"); 
+      } 
+    }
+
+    // --- Added Missing Functions ---
+
+    function toggleDropdown(id, event) {
+        event.stopPropagation();
+        // Hide others
+        document.querySelectorAll('.dropdown-content').forEach(dd => {
+            if(dd.id !== id) dd.classList.remove('show');
+        });
+        // Toggle target
+        const el = document.getElementById(id);
+        if(el) el.classList.toggle('show');
+    }
+
+    // Close dropdowns when clicking elsewhere
+    window.onclick = function(event) {
+        if (!event.target.matches('.dropbtn') && !event.target.closest('.dropbtn')) {
+            document.querySelectorAll('.dropdown-content').forEach(dd => {
+                dd.classList.remove('show');
+            });
+        }
+    }
+
+    function deleteOrder(id) {
+        if(!confirm('ยืนยันการลบออเดอร์ ' + id + '?')) return;
+        db.orders = db.orders.filter(o => o.id !== id);
+        save();
+        renderOrders();
+        renderDashboard();
+        showToast("ลบออเดอร์เรียบร้อย");
+        
+        // Sync delete
+        try {
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ action: 'delete', id: id })
+            });
+        } catch(e) { console.error(e); }
+    }
+
+    function editOrder(id) {
+        const o = db.orders.find(x => x.id === id);
+        if(!o) return;
+        
+        editingOrderId = id;
+        router('create');
+        
+        document.getElementById('create-title').innerText = "แก้ไขออเดอร์ " + id;
+        const btn = document.getElementById('btn-save');
+        btn.innerText = "บันทึกการแก้ไข";
+        btn.className = "btn btn-warning btn-lg";
+        
+        document.getElementById('in-name').value = o.name;
+        document.getElementById('in-phone').value = o.phone;
+        document.getElementById('in-address').value = o.address;
+        document.getElementById('in-channel').value = o.channel;
+        document.getElementById('in-payment').value = o.payment;
+        document.getElementById('in-status').value = o.status;
+        
+        document.getElementById('form-discount-input').value = o.discount || 0;
+        // Reset rows
+        document.getElementById('form-items-container').innerHTML = '';
+        if(o.items && o.items.length) {
+            o.items.forEach(item => addFormRow(item));
+        } else {
+            addFormRow();
+        }
+        calcTotal();
+    }
+
+    async function handleSaveOrder(event) {
+        event.preventDefault();
+        
+        const items = [];
+        document.querySelectorAll('.item-list-row').forEach(row => {
+            const name = row.querySelector('.item-name').value;
+            if(name) {
+                items.push({
+                    name: name,
+                    sku: row.querySelector('.item-sku').value,
+                    qty: parseFloat(row.querySelector('.item-qty').value) || 0,
+                    price: parseFloat(row.querySelector('.item-price').value) || 0
                 });
             }
         });
 
-        const rows = Object.values(summary).map((i, idx) => `
-            <tr>
-              <td style="text-align:center; border: 1px solid #333; padding: 10px;">${idx + 1}</td>
-              <td style="border: 1px solid #333; padding: 10px;">${i.name}<br><small style="color:#666">SKU: ${i.sku || '-'}</small></td>
-              <td style="text-align:center; border: 1px solid #333; padding: 10px; font-weight: 800; font-size: 18px; color: var(--primary);">${i.qty}</td>
-              <td style="border: 1px solid #333; padding: 10px; text-align: center; font-size: 16px;">[ &nbsp;&nbsp; ]</td>
-            </tr>
-        `).join('');
+        if(items.length === 0) return alert("กรุณาเพิ่มสินค้าอย่างน้อย 1 รายการ");
 
-        return `
-            <div style="padding:40px; font-family:'Sarabun', sans-serif; color: #000; line-height: 1.4; background:#fff;">
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 3px solid var(--primary); padding-bottom: 15px;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                  <img src="${COMPANY_INFO.logo}" style="height:50px;">
-                  <div>
-                    <div style="font-weight:800; font-size:18px; color: var(--primary);">${COMPANY_INFO.name}</div>
-                    <div style="font-size: 12px; color:#666;">สรุปรายการเบิกสินค้าทั้งหมด (Summary Pick List)</div>
-                  </div>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-size:12px; font-weight:700;">วันที่ออกเอกสาร: ${new Date().toLocaleDateString('th-TH')}</div>
-                  <div style="font-size:12px; color:#666;">จำนวนออเดอร์ที่รวม: ${ids.length} รายการ</div>
-                </div>
-              </div>
+        const orderData = {
+            id: editingOrderId || generateNextOrderId(),
+            date: editingOrderId ? db.orders.find(o=>o.id===editingOrderId).date : new Date().toISOString(),
+            name: document.getElementById('in-name').value,
+            phone: document.getElementById('in-phone').value,
+            address: document.getElementById('in-address').value,
+            channel: document.getElementById('in-channel').value,
+            payment: document.getElementById('in-payment').value,
+            status: document.getElementById('in-status').value,
+            items: items,
+            subtotal: parseFloat(document.getElementById('form-subtotal').innerText.replace(/,/g, '')),
+            discount: parseFloat(document.getElementById('form-discount-input').value) || 0,
+            total: parseFloat(document.getElementById('form-total').innerText.replace(/,/g, '')),
+            order_source: 'manual'
+        };
 
-              <div style="margin-bottom: 20px; font-size: 14px; font-weight: 700; color: #333;">รายการที่ต้องเตรียมทั้งหมด:</div>
-              
-              <table style="width:100%; border-collapse:collapse; margin-bottom:30px; font-size: 14px;">
-                <thead>
-                  <tr style="background:var(--primary); color: #fff;">
-                    <th style="border: 1px solid #333; padding: 12px; width: 60px; text-align: center;">No.</th>
-                    <th style="border: 1px solid #333; padding: 12px; text-align: left;">ชื่อสินค้า / SKU</th>
-                    <th style="border: 1px solid #333; padding: 12px; width: 100px; text-align: center;">จำนวนรวม</th>
-                    <th style="border: 1px solid #333; padding: 12px; width: 100px; text-align: center;">Check</th>
-                  </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-              </table>
-
-              <div style="background: #f8fafc; border: 1px dashed #cbd5e0; padding: 20px; border-radius: 8px; font-size: 12px; margin-top: 50px;">
-                <b>หมายเหตุ:</b> รายการนี้เป็นการรวมยอดจากหลายออเดอร์เพื่อให้คลังสินค้าหยิบของได้รวดเร็ว กรุณาใช้ประกอบกับใบเบิกแยกรายการเพื่อแพ็คสินค้าลงกล่องให้ถูกต้อง
-              </div>
-
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; margin-top: 80px; text-align: center; font-size: 13px;">
-                <div><div style="border-bottom: 1px solid #000; margin-bottom: 10px; height: 40px;"></div><div style="font-weight: 700;">เจ้าหน้าที่คลังสินค้า (ผู้จัดของ)</div></div>
-                <div><div style="border-bottom: 1px solid #000; margin-bottom: 10px; height: 40px;"></div><div style="font-weight: 700;">เจ้าหน้าที่ตรวจสอบ (QC)</div></div>
-              </div>
-            </div>
-        `;
-    }
-
-    function generateCorporateHtml(order, type) {
-        const isWithdrawal = type === 'withdrawal';
-        const isQuotation = type === 'quotation';
-        let docTitle = isQuotation ? 'ใบเสนอราคา<br><small style="font-size: 12px; color: #666;">QUOTATION</small>' : 'ใบแจ้งหนี้ / ใบเสร็จรับเงิน<br><small style="font-size: 12px; color: #666;">INVOICE / RECEIPT</small>';
-        if (isWithdrawal) docTitle = 'ใบเบิกสินค้า / PICK LIST';
-
-        if (isWithdrawal) {
-          const itemsRows = (order.items || []).map((i, idx) => `
-              <tr>
-                <td style="text-align:center; border: 1px solid #333; padding: 6px;">${idx + 1}</td>
-                <td style="border: 1px solid #333; padding: 6px;">${i.name}<br><small style="color:#666">SKU: ${i.sku || '-'}</small></td>
-                <td style="text-align:center; border: 1px solid #333; padding: 6px; font-weight: bold; font-size: 15px; color: var(--primary);">${Number(i.qty).toFixed(0)}</td>
-                <td style="border: 1px solid #333; padding: 6px; text-align: center;">[ &nbsp;&nbsp; ]</td>
-              </tr>
-          `).join('');
-
-          return `
-            <div style="padding:10mm 20mm; font-family:'Sarabun', sans-serif; color: #000; line-height: 1.3; flex-grow: 1;">
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4mm; border-bottom: 1px solid #eee; padding-bottom: 2mm;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <img src="${COMPANY_INFO.logo}" style="height:30px;">
-                  <div>
-                    <div style="font-weight:700; font-size:12px;">${COMPANY_INFO.name}</div>
-                    <div style="font-size: 9px; color:#666;">Tax ID: ${COMPANY_INFO.taxId} | Tel: ${COMPANY_INFO.tel}</div>
-                  </div>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-size:15px; font-weight:800; color:var(--primary); text-transform: uppercase; margin-bottom: 2px;">${docTitle}</div>
-                  <div style="font-size: 10px; font-weight:700;">ID: ${order.id} | วันที่: ${safeDate(order.date)}</div>
-                </div>
-              </div>
-              <div style="background: #f9fafb; padding: 3mm; border-radius: 4px; margin-bottom: 4mm; font-size: 10px; line-height: 1.4; border: 1px solid #eee;">
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 1mm; margin-bottom: 1mm;">
-                  <div><b>ลูกค้า:</b> ${order.name} (${order.phone})</div>
-                  <div style="text-align:right;"><b>ช่องทาง:</b> ${order.channel || '-'}</div>
-                </div>
-                <div style="color: #444; white-space: pre-line;"><b>ที่อยู่จัดส่ง:</b> ${order.address}</div>
-              </div>
-              <table style="width:100%; border-collapse:collapse; margin-bottom:5mm; font-size: 10px;">
-                <thead>
-                  <tr style="background:#f2f2f2; color: #333;">
-                    <th style="border: 1px solid #333; padding: 6px; width: 35px; text-align: center;">No.</th>
-                    <th style="border: 1px solid #333; padding: 6px; text-align: left;">รายการสินค้า</th>
-                    <th style="border: 1px solid #333; padding: 6px; width: 55px; text-align: center;">จำนวน</th>
-                    <th style="border: 1px solid #333; padding: 6px; width: 60px; text-align: center;">Check</th>
-                  </tr>
-                </thead>
-                <tbody>${itemsRows}</tbody>
-              </table>
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; text-align: center; font-size: 9px; margin-top: auto; padding-bottom: 5mm;">
-                <div><div style="border-bottom: 1px solid #000; height: 12px; margin-bottom: 3px;"></div><div style="font-weight: 700;">ผู้เบิกของ (Picker)</div></div>
-                <div><div style="border-bottom: 1px solid #000; height: 12px; margin-bottom: 3px;"></div><div style="font-weight: 700;">QC / ตรวจสอบ</div></div>
-                <div><div style="border-bottom: 1px solid #000; height: 12px; margin-bottom: 3px;"></div><div style="font-weight: 700;">ผู้จ่ายของ (Warehouse)</div></div>
-              </div>
-            </div>
-          `;
+        if(editingOrderId) {
+            const idx = db.orders.findIndex(x => x.id === editingOrderId);
+            if(idx !== -1) db.orders[idx] = orderData;
         } else {
-          const itemsRows = (order.items || []).map((i, idx) => `
-              <tr>
-                <td style="text-align:center; border: 1px solid #333; padding: 10px;">${idx + 1}</td>
-                <td style="border: 1px solid #333; padding: 10px;">${i.name}<br><small style="color:#666">SKU: ${i.sku || '-'}</small></td>
-                <td style="text-align:center; border: 1px solid #333; padding: 10px;">${Number(i.qty).toFixed(2)}</td>
-                <td style="text-align:right; border: 1px solid #333; padding: 10px;">${Number(i.price).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                <td style="text-align:right; border: 1px solid #333; padding: 10px;">${(i.qty * i.price).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-              </tr>
-          `).join('');
-
-          return `
-            <div style="padding:50px; font-family:'Sarabun', sans-serif; color: #000; line-height: 1.4; background:#fff;">
-              <div style="display: grid; grid-template-columns: 1.8fr 1fr; gap: 40px; margin-bottom: 30px;">
-                <div>
-                  <div style="margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
-                    <img src="${COMPANY_INFO.logo}" style="height:55px; margin-bottom:12px; display: block;">
-                    <div style="font-weight:700; font-size:16px; margin-bottom: 4px;">${COMPANY_INFO.name}</div>
-                    <div style="font-size: 12px; color:#333;">${COMPANY_INFO.address}</div>
-                    <div style="font-size: 12px; margin-top: 6px;">TEL: ${COMPANY_INFO.tel} | Tax ID: ${COMPANY_INFO.taxId}</div>
-                  </div>
-                  <div style="font-size: 12px;">
-                    <div style="font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 6px; font-size: 11px;">ลูกค้า / Customer (Bill To)</div>
-                    <div style="font-weight:700; font-size:15px; margin-bottom: 4px;">${order.name}</div>
-                    <div style="color:#333; white-space: pre-line;">${order.address}</div>
-                    <div style="margin-top: 5px; font-weight: 600;">โทร. ${order.phone}</div>
-                  </div>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-size:22px; font-weight:800; color:#000; margin-bottom: 20px; text-transform: uppercase;">${docTitle}</div>
-                  <table style="width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 15px;">
-                    <tr><td align="right" style="padding: 4px 10px; color:#666;">เลขที่ / No.</td><td align="right" style="padding: 4px 0; font-weight:700;">${order.id}</td></tr>
-                    <tr><td align="right" style="padding: 4px 10px; color:#666;">วันที่ / Date</td><td align="right" style="padding: 4px 0; font-weight:700;">${safeDate(order.date)}</td></tr>
-                    <tr><td align="right" style="padding: 4px 10px; color:#666;">การชำระเงิน / Terms</td><td align="right" style="padding: 4px 0; font-weight:700;">${order.payment || 'โอนเงิน'}</td></tr>
-                  </table>
-                </div>
-              </div>
-              <div style="border-top: 3px solid #000; margin-bottom: 20px;"></div>
-              <table style="width:100%; border-collapse:collapse; margin-bottom:30px; font-size: 13px;">
-                <thead>
-                  <tr style="background:#f8fafc;">
-                    <th style="border: 1px solid #333; padding: 12px 8px; width: 50px; text-align: center;">No.</th>
-                    <th style="border: 1px solid #333; padding: 12px 8px; text-align: left;">รายการสินค้า (Descriptions)</th>
-                    <th style="border: 1px solid #333; padding: 12px 8px; width: 80px; text-align: center;">จำนวน</th>
-                    <th style="border: 1px solid #333; padding: 12px 8px; width: 110px; text-align: right;">หน่วยละ</th>
-                    <th style="border: 1px solid #333; padding: 12px 8px; width: 130px; text-align: right;">จำนวนเงิน</th>
-                  </tr>
-                </thead>
-                <tbody>${itemsRows}</tbody>
-              </table>
-              <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 50px;">
-                <div style="font-size: 11px;">
-                  <div style="font-weight: 700; margin-bottom: 8px;">หมายเหตุ / Remark:</div>
-                  <div style="border: 1px solid #eee; padding: 15px; min-height: 100px; color: #444; border-radius: 6px; line-height: 1.6;">
-                    1. ราคานี้รวมภาษีมูลค่าเพิ่มแล้ว (ถ้ามี)<br>2. กำหนดยืนราคา 30 วันนับจากวันที่เสนอราคา<br>3. สินค้าซื้อแล้วไม่รับเปลี่ยนหรือคืน
-                  </div>
-                </div>
-                <div style="font-size: 13px;">
-                  <table style="width: 100%; border-collapse: collapse;">
-                    <tr><td style="padding: 8px 0;">Gross Amount</td><td align="right" style="font-weight: 700;">฿${(Number(order.subtotal) || Number(order.total)).toLocaleString()}</td></tr>
-                    <tr style="color: #ef4444;"><td style="padding: 8px 0;">Less Discount</td><td align="right" style="font-weight: 700;">-฿${(Number(order.discount) || 0).toLocaleString()}</td></tr>
-                    <tr style="border-top: 2px solid #000; font-weight: 800; font-size: 16px;"><td style="padding: 15px 0;">Grand Total</td><td align="right" style="padding: 15px 0; color: var(--primary);">฿${Number(order.total).toLocaleString()}</td></tr>
-                  </table>
-                </div>
-              </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 100px; margin-top: 80px; text-align: center; font-size: 12px;">
-                <div><div style="border-bottom: 1px solid #000; margin-bottom: 10px; height: 40px;"></div><div style="font-weight: 700;">ผู้อนุมัติสั่งซื้อ / Authorized By</div></div>
-                <div><div style="border-bottom: 1px solid #000; margin-bottom: 10px; height: 40px;"></div><div style="font-weight: 700;">ผู้เสนอราคา / Sale Person</div></div>
-              </div>
-            </div>
-          `;
+            db.orders.unshift(orderData);
         }
+
+        save();
+        showToast(editingOrderId ? "แก้ไขเรียบร้อย" : "บันทึกออเดอร์สำเร็จ");
+        
+        // Sync
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: editingOrderId ? 'update' : 'create', ...orderData })
+            });
+        } catch(e) { console.error(e); }
+
+        router('orders');
     }
 
-    // --- Packing Logic (Refined) ---
+    // --- Packing Logic ---
     function renderPacking() {
         const p = db.orders.filter(o => o.status === 'Paid');
         document.getElementById('pack-queue-count').innerText = p.length;
@@ -2386,7 +2358,7 @@
         document.getElementById('pack-items-list').innerHTML = listHtml;
         
         // Update Progress
-        const percent = Math.floor((totalScanned / totalNeeded) * 100) || 0;
+        const percent = totalNeeded > 0 ? Math.floor((totalScanned / totalNeeded) * 100) : 0;
         document.getElementById('pack-progress-bar').style.width = percent + '%';
         document.getElementById('pack-progress-text').innerText = percent + '%';
         
@@ -2464,26 +2436,117 @@
       } catch(e) { console.error(e); }
     }
 
-    // --- Dropdown Toggle Logic ---
-    function toggleDropdown(id, event) {
-        event.stopPropagation();
-        const el = document.getElementById(id);
-        const isShown = el.classList.contains('show');
-        
-        // Close all first
-        document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
-        
-        // Toggle target
-        if (!isShown) el.classList.add('show');
+    // --- Product Import & Edit Logic ---
+    function triggerImport() {
+        document.getElementById('import-file').click();
     }
 
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.dropdown')) {
-            document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
-        }
-    });
+    function handleImportCSV(input) {
+        const file = input.files[0];
+        if (!file) return;
 
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const lines = text.split('\n');
+            let addedCount = 0;
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const parts = line.split(',');
+                if (parts.length >= 3) {
+                    const sku = parts[0].trim();
+                    const name = parts[1].trim();
+                    const price = parseFloat(parts[2].trim()) || 0;
+                    const barcode = parts[3] ? parts[3].trim() : '';
+                    const image = parts[4] ? parts[4].trim() : '';
+                    
+                    if (sku && name) {
+                        const idx = db.products.findIndex(p => p.sku === sku);
+                        const newProd = { sku, name, price, barcode, image };
+                        
+                        if (idx >= 0) {
+                            db.products[idx] = newProd; 
+                        } else {
+                            db.products.push(newProd); 
+                        }
+                        addedCount++;
+                    }
+                }
+            }
+            
+            save();
+            renderProducts();
+            showToast(`Import สำเร็จ ${addedCount} รายการ`, 2000);
+            input.value = ''; 
+        };
+        reader.readAsText(file);
+    }
+
+    function openProductModal(editSku = null) {
+        document.getElementById('product-modal').classList.remove('hidden');
+        if (editSku) {
+            const p = db.products.find(x => x.sku === editSku);
+            if (!p) return;
+            document.getElementById('product-modal-title').innerText = "แก้ไขสินค้า";
+            document.getElementById('p-mode').value = "edit";
+            document.getElementById('p-sku').value = p.sku;
+            document.getElementById('p-sku').disabled = true; 
+            document.getElementById('p-name').value = p.name;
+            document.getElementById('p-price').value = p.price;
+            document.getElementById('p-barcode').value = p.barcode || '';
+            document.getElementById('p-image').value = p.image || ''; 
+            setImgMode('url');
+            previewImage(p.image || '');
+        } else {
+            document.getElementById('product-modal-title').innerText = "เพิ่มสินค้าใหม่";
+            document.getElementById('p-mode').value = "add";
+            document.getElementById('p-sku').value = "";
+            document.getElementById('p-sku').disabled = false;
+            document.getElementById('p-name').value = "";
+            document.getElementById('p-price').value = "";
+            document.getElementById('p-barcode').value = "";
+            document.getElementById('p-image').value = "";
+            setImgMode('url');
+            previewImage('');
+        }
+    }
+
+    function handleSaveProduct() {
+        const mode = document.getElementById('p-mode').value;
+        const sku = document.getElementById('p-sku').value.trim();
+        const name = document.getElementById('p-name').value.trim();
+        const price = parseFloat(document.getElementById('p-price').value);
+        const barcode = document.getElementById('p-barcode').value.trim();
+        const image = document.getElementById('p-image').value.trim();
+
+        if(!sku || !name || isNaN(price)) { alert('กรุณากรอกข้อมูลให้ครบถ้วน'); return; }
+
+        if (mode === 'add') {
+            if (db.products.some(p => p.sku === sku)) { alert('SKU นี้มีอยู่แล้ว'); return; }
+            db.products.push({ sku, name, price, barcode, image });
+        } else {
+            const idx = db.products.findIndex(p => p.sku === sku);
+            if (idx !== -1) {
+                db.products[idx] = { sku, name, price, barcode, image };
+            }
+        }
+        
+        save();
+        closeModal(null, true);
+        renderProducts();
+        showToast('บันทึกสินค้าเรียบร้อย');
+    }
+
+    function delProd(sku) {
+        if(!confirm('ยืนยันลบสินค้า ' + sku + '?')) return;
+        db.products = db.products.filter(p => p.sku !== sku);
+        save();
+        renderProducts();
+    }
+    
     // --- Helper Functions for Image Source ---
     function setImgMode(mode) {
         document.getElementById('mode-url').classList.add('hidden');
@@ -2636,39 +2699,6 @@
             noImg.innerText = 'ไม่มีรูปภาพ';
         }
     }
-
-    function handleSaveProduct() {
-        const mode = document.getElementById('p-mode').value;
-        const sku = document.getElementById('p-sku').value.trim();
-        const name = document.getElementById('p-name').value.trim();
-        const price = parseFloat(document.getElementById('p-price').value);
-        const barcode = document.getElementById('p-barcode').value.trim();
-        const image = document.getElementById('p-image').value.trim();
-
-        if(!sku || !name || isNaN(price)) { alert('กรุณากรอกข้อมูลให้ครบถ้วน'); return; }
-
-        if (mode === 'add') {
-            if (db.products.some(p => p.sku === sku)) { alert('SKU นี้มีอยู่แล้ว'); return; }
-            db.products.push({ sku, name, price, barcode, image });
-        } else {
-            const idx = db.products.findIndex(p => p.sku === sku);
-            if (idx !== -1) {
-                db.products[idx] = { sku, name, price, barcode, image };
-            }
-        }
-        
-        save();
-        closeModal(null, true);
-        renderProducts();
-        showToast('บันทึกสินค้าเรียบร้อย');
-    }
-
-    function delProd(sku) {
-        if(!confirm('ยืนยันลบสินค้า ' + sku + '?')) return;
-        db.products = db.products.filter(p => p.sku !== sku);
-        save();
-        renderProducts();
-    }
     
     // --- Sync Functions (Fixed) ---
     async function fetchHistory(isAuto = false) {
@@ -2689,6 +2719,7 @@
         router('dashboard'); 
         fetchHistory(); 
         setInterval(() => fetchHistory(true), 300000);
+        updateProductDatalist(); // Init datalist
     }
 
     window.onload = initApp;
