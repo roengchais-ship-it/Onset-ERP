@@ -3,9 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Onset ERP v4.9.4 - Inventory Updated</title>
+  <title>Onset ERP v4.9.5 - Sales Import & Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <!-- Added SheetJS for Excel/CSV Import -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <!-- Added Chart.js for Dashboard Visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     /* --- MODERN THEME VARIABLES --- */
@@ -31,6 +35,7 @@
       --warning-bg: #fef3c7; --warning-text: #92400e;
       --danger-bg: #fee2e2;  --danger-text: #991b1b;
       --info-bg: #e0f2fe;    --info-text: #075985;
+      --imported-bg: #f3e8ff; --imported-text: #7e22ce; /* Purple for Imported */
 
       /* Dimensions & Effects */
       --sidebar-width: 260px;
@@ -101,11 +106,6 @@
       font-weight: 500;
     }
     
-    .nav-item:hover { 
-      background: rgba(255,255,255,0.05); 
-      color: #f1f5f9; 
-    }
-    
     .nav-item.active { 
       background: var(--primary); 
       color: white; 
@@ -151,39 +151,23 @@
       color: var(--text-main);
     }
 
-    /* Stats Grid */
-    .stats-grid { 
-      display: grid; 
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
-      gap: 24px; 
-      margin-bottom: 32px; 
-    }
+    /* --- DASHBOARD STYLES --- */
+    .dash-controls { display: flex; gap: 10px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; }
+    .dash-filter-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 13px; color: var(--text-muted); transition: all 0.2s; }
+    .dash-filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: var(--shadow-sm); }
     
-    .stat-card { 
-      background: var(--surface); 
-      padding: 24px; 
-      border-radius: var(--radius-lg); 
-      border: 1px solid var(--border); 
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
+    .dash-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .dash-kpi-card { background: white; padding: 20px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: center; }
+    .dash-kpi-title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .dash-kpi-value { font-size: 24px; font-weight: 800; color: var(--text-main); display: flex; align-items: baseline; gap: 5px; }
+    .dash-kpi-sub { font-size: 12px; color: var(--success-text); font-weight: 500; background: var(--success-bg); padding: 2px 6px; border-radius: 4px; }
+
+    .dash-charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
+    .dash-bottom-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 24px; }
+    .chart-container { position: relative; height: 250px; width: 100%; }
     
-    .stat-label { 
-      font-size: 14px; 
-      font-weight: 500;
-      color: var(--text-muted); 
-      margin-bottom: 8px; 
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .stat-value { 
-      font-size: 32px; 
-      font-weight: 700; 
-      color: var(--text-main); 
-      line-height: 1.2;
+    @media (max-width: 1000px) { 
+        .dash-charts-grid, .dash-bottom-grid { grid-template-columns: 1fr; } 
     }
 
     /* --- FORM ELEMENTS --- */
@@ -220,39 +204,46 @@
     }
     .item-list-row .form-control { margin-bottom: 0; }
 
-    /* --- TABLE --- */
-    table { 
-      width: 100%; 
-      border-collapse: separate; 
-      border-spacing: 0; 
-      width: 100%;
-    }
+    /* --- TABLE (REDESIGNED FOR ERP LOOK) --- */
+    table { width: 100%; border-collapse: separate; border-spacing: 0; }
     
-    th { 
-      text-align: left; 
-      padding: 14px 20px; 
-      background: #f8fafc; 
-      color: var(--text-muted); 
-      font-size: 12px; 
-      font-weight: 600; 
-      text-transform: uppercase; 
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid var(--border); 
+    .table-erp { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #e2e8f0; border-radius: var(--radius-md); overflow: hidden; }
+    .table-erp th { 
+      background: #f8fafc; color: #475569; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;
+      padding: 12px 16px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #f1f5f9; position: sticky; top: 0; z-index: 10;
     }
-    th:first-child { border-top-left-radius: var(--radius-md); }
-    th:last-child { border-top-right-radius: var(--radius-md); }
+    .table-erp th:last-child { border-right: none; }
+    .table-erp th:first-child { border-top-left-radius: var(--radius-md); }
+    .table-erp th:last-child { border-top-right-radius: var(--radius-md); }
 
-    td { 
-      padding: 16px 20px; 
-      border-bottom: 1px solid var(--border); 
-      font-size: 14px; 
-      vertical-align: middle; 
-      color: var(--text-main);
+    .table-erp td { 
+        padding: 14px 16px; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f8fafc; vertical-align: top; 
+        color: var(--text-main); font-size: 13px; background: #fff; transition: background 0.15s; 
     }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #f8fafc; }
+    .table-erp td:last-child { border-right: none; }
+    .table-erp tr:last-child td { border-bottom: none; }
+    .table-erp tr:hover td { background: #f0f9ff; } /* Light blue hover */
     
+    /* Column Specifics */
     .col-checkbox { width: 40px; text-align: center; }
+    .font-mono { font-family: 'Courier New', Courier, monospace; letter-spacing: -0.5px; }
+    .text-end { text-align: right; }
+    .text-center { text-align: center; }
+    .text-dark { color: #0f172a; }
+    .text-secondary { color: #64748b; }
+    .text-xs { font-size: 12px; }
+    .fw-bold { font-weight: 600; }
+    
+    /* Product Item Style */
+    .erp-item { display: flex; align-items: baseline; margin-bottom: 4px; font-size: 13px; line-height: 1.4; }
+    .erp-item-name { color: #334155; font-weight: 500; margin-right: 6px; }
+    .erp-item-sku { color: #94a3b8; font-size: 11px; margin-right: auto; }
+    .erp-item-qty { background: #f1f5f9; color: #475569; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    
+    /* Action Buttons Style */
+    .action-btn { background: transparent; border: none; color: #94a3b8; cursor: pointer; padding: 6px; border-radius: 4px; transition: all 0.2s; display: inline-flex; }
+    .action-btn:hover { background: #f1f5f9; color: var(--primary); }
+    .action-btn.delete:hover { color: #ef4444; }
 
     /* --- BUTTONS --- */
     .btn { 
@@ -312,6 +303,7 @@
     .badge-New { background: var(--info-bg); color: var(--info-text); }
     .badge-Paid { background: var(--success-bg); color: var(--success-text); }
     .badge-Shipped { background: var(--warning-bg); color: var(--warning-text); }
+    .badge-Imported { background: var(--imported-bg); color: var(--imported-text); } /* New Badge for Import */
 
     /* --- BULK ACTION BAR (FIXED CSS) --- */
     .bulk-action-bar {
@@ -413,6 +405,69 @@
 
     @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
 
+    /* --- BARCODE MODAL STYLES --- */
+    .barcode-preview-box {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #fff;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+        min-height: 160px;
+        display: flex; /* Changed to flex for side-by-side */
+        align-items: center;
+        justify-content: center;
+        gap: 20px; /* Spacing between image and details */
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .barcode-image-container {
+        flex-shrink: 0;
+        width: 100px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    .barcode-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .barcode-image-placeholder {
+        font-size: 11px;
+        color: var(--text-light);
+        text-align: center;
+        padding: 10px;
+    }
+    .barcode-info-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Center content in the info container */
+        justify-content: center;
+    }
+    .barcode-bars {
+        height: 60px;
+        width: 100%;
+        max-width: 200px;
+        background-image: linear-gradient(90deg, #000 0%, #000 5%, transparent 5%, transparent 10%, #000 10%, #000 15%, transparent 15%, transparent 20%, #000 20%, #000 25%, #000 30%, transparent 30%, transparent 35%, #000 35%, #000 40%, transparent 40%, transparent 45%, #000 45%, #000 50%, transparent 50%, transparent 55%, #000 55%, #000 60%, transparent 60%, transparent 65%, #000 65%, #000 70%, transparent 70%, transparent 75%, #000 75%, #000 85%, transparent 85%, transparent 90%, #000 90%, #000 100%);
+        margin: 0 auto 5px;
+    }
+    .barcode-text { font-family: 'Courier New', monospace; letter-spacing: 2px; font-weight: 600; font-size: 14px; }
+    .option-group { margin-bottom: 16px; }
+    .option-title { font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
+    .radio-pill-group { display: flex; gap: 10px; }
+    .radio-pill { 
+        border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text-muted); transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+    }
+    .radio-pill input { accent-color: var(--primary); }
+    .radio-pill:hover { background: #f8fafc; }
+    .radio-pill.active { border-color: var(--primary); color: var(--primary); background: var(--primary-light); font-weight: 600; }
+
     /* --- MODAL --- */
     .modal-overlay { 
       position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
@@ -468,6 +523,122 @@
         border-bottom: none;
         page-break-after: auto;
       }
+
+      /* --- 1. BARCODE PRINT LAYOUT (NEW) --- */
+      .barcode-print-page {
+          width: 100%;
+          height: 100%;
+          background: white;
+          font-family: 'Sarabun', sans-serif;
+          color: black;
+      }
+
+      /* A4 Grid Layout */
+      .barcode-grid-a4 {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr); /* 3 Columns */
+          grid-template-rows: repeat(8, 1fr);    /* 8 Rows */
+          gap: 4mm;
+          padding: 10mm;
+          height: 295mm; /* A4 Height approx */
+          box-sizing: border-box;
+      }
+
+      /* Single Label Layout (Continuous Feed / Thermal Printer) */
+      .barcode-single-label {
+          width: 100%; 
+          /* height is determined by content or printer settings */
+          padding: 2mm;
+          page-break-after: always;
+      }
+
+      /* --- THE STICKER DESIGN --- */
+      .sticker-container {
+          border: 1px dashed #ddd; /* Visual guide for cutting, usually invisible in thermal */
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          padding: 3mm;
+          height: 100%;
+          max-height: 38mm; /* Approx standard label height */
+          overflow: hidden;
+          box-sizing: border-box;
+      }
+      
+      .sticker-img {
+          width: 35mm;
+          height: 35mm;
+          flex-shrink: 0;
+          margin-right: 3mm;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid #eee;
+      }
+      .sticker-img img {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+      }
+      
+      .sticker-content {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          height: 100%;
+          text-align: left;
+      }
+      
+      .sticker-name {
+          font-weight: 700;
+          font-size: 11pt;
+          line-height: 1.1;
+          margin-bottom: 2px;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+      }
+      
+      .sticker-sku {
+          font-size: 9pt;
+          color: #333;
+          margin-bottom: 2px;
+      }
+
+      .sticker-price {
+          font-size: 10pt;
+          font-weight: 600;
+          margin-bottom: 2px;
+      }
+      
+      /* Barcode Visual */
+      .sticker-barcode-wrapper {
+          text-align: center;
+          margin-top: auto;
+          width: 100%;
+      }
+      .sticker-barcode-bars {
+          height: 18px; /* Standard EAN height approx */
+          width: 100%;
+          min-width: 35mm;
+          background-image: repeating-linear-gradient(
+            to right,
+            black 0px, black 1px,
+            transparent 1px, transparent 3px,
+            black 3px, black 4px,
+            transparent 4px, transparent 5px
+          );
+          margin: 0 auto;
+      }
+      .sticker-barcode-num {
+          font-family: 'Courier New', monospace;
+          font-size: 8pt;
+          letter-spacing: 2px;
+          margin-top: 1px;
+          font-weight: 600;
+      }
     }
     #printable-area { display: none; background: white; color: black; }
   </style>
@@ -496,51 +667,114 @@
     <div id="view-dashboard">
       <div class="page-title">
         Dashboard ภาพรวม
-        <div style="font-size: 14px; color: var(--text-muted); font-weight: normal; display: flex; align-items: center; gap: 5px;">
-             <span class="material-icons-round" style="font-size: 16px;">today</span> ข้อมูลวันนี้
+        <div style="font-size: 14px; font-weight: normal; color: var(--text-muted);">
+            วิเคราะห์ยอดขายและประสิทธิภาพ
         </div>
       </div>
-      <div class="stats-grid">
-        <div class="stat-card">
-            <div style="display: flex; justify-content: space-between; align-items: start;">
-                <div>
-                    <div class="stat-label">ยอดขายรวม</div>
-                    <div class="stat-value" id="stat-sales" style="color: var(--primary);">฿0</div>
-                </div>
-                <span class="material-icons-round" style="font-size: 40px; color: var(--primary-light); background: var(--primary); border-radius: 50%; padding: 8px; color: white;">payments</span>
-            </div>
+
+      <!-- Controls -->
+      <div class="dash-controls">
+          <div class="dash-filter-btn active" id="filter-today" onclick="setDashFilter('today')">วันนี้</div>
+          <div class="dash-filter-btn" id="filter-week" onclick="setDashFilter('week')">สัปดาห์นี้</div>
+          <div class="dash-filter-btn" id="filter-month" onclick="setDashFilter('month')">เดือนนี้</div>
+          <div style="width: 1px; height: 24px; background: var(--border); margin: 0 10px;"></div>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; user-select: none;">
+              <input type="checkbox" id="dash-include-import" onchange="renderDashboard()" checked style="accent-color: var(--primary); width: 16px; height: 16px;">
+              รวมออเดอร์ Import
+          </label>
+      </div>
+
+      <!-- KPI Grid -->
+      <div class="dash-kpi-grid">
+        <div class="dash-kpi-card">
+            <div class="dash-kpi-title">ยอดขายรวม (Total Sales)</div>
+            <div class="dash-kpi-value" id="kpi-sales" style="color: var(--primary);">฿0</div>
         </div>
-        <div class="stat-card">
-            <div style="display: flex; justify-content: space-between; align-items: start;">
-                <div>
-                    <div class="stat-label">ออเดอร์ทั้งหมด</div>
-                    <div class="stat-value" id="stat-total">0</div>
-                </div>
-                <span class="material-icons-round" style="font-size: 40px; color: var(--info-text); background: var(--info-bg); border-radius: 50%; padding: 8px;">shopping_cart</span>
-            </div>
+        <div class="dash-kpi-card">
+            <div class="dash-kpi-title">จำนวนออเดอร์ (Total Orders)</div>
+            <div class="dash-kpi-value" id="kpi-orders">0</div>
         </div>
-        <div class="stat-card">
-            <div style="display: flex; justify-content: space-between; align-items: start;">
-                <div>
-                    <div class="stat-label">รอจัดส่ง</div>
-                    <div class="stat-value" style="color:var(--danger-text)" id="stat-pending">0</div>
-                </div>
-                <span class="material-icons-round" style="font-size: 40px; color: var(--danger-text); background: var(--danger-bg); border-radius: 50%; padding: 8px;">local_shipping</span>
-            </div>
+        <div class="dash-kpi-card">
+            <div class="dash-kpi-title">จำนวนลูกค้า (Customers)</div>
+            <div class="dash-kpi-value" id="kpi-customers">0</div>
+        </div>
+        <div class="dash-kpi-card">
+            <div class="dash-kpi-title">ออเดอร์ที่ส่งแล้ว (Shipped)</div>
+            <div class="dash-kpi-value" id="kpi-shipped" style="color: var(--success-text);">0</div>
+        </div>
+        <div class="dash-kpi-card">
+            <div class="dash-kpi-title">ยอดเฉลี่ยต่อออเดอร์ (AOV)</div>
+            <div class="dash-kpi-value" id="kpi-aov">฿0</div>
         </div>
       </div>
-      <div class="card">
-        <h3>ออเดอร์ล่าสุด</h3>
-        <table>
-          <thead><tr><th>Order ID</th><th>ลูกค้า</th><th>รายการสินค้า</th><th>ยอดเงิน</th><th>สถานะ</th></tr></thead>
-          <tbody id="recent-orders-body"></tbody>
-        </table>
+
+      <!-- Charts Area -->
+      <div class="dash-charts-grid">
+          <div class="card">
+              <h3><span class="material-icons-round" style="vertical-align: middle; color: var(--primary);">show_chart</span> แนวโน้มยอดขาย (Sales Trend)</h3>
+              <div class="chart-container">
+                  <canvas id="chart-trend"></canvas>
+              </div>
+          </div>
+          <div class="card">
+              <h3><span class="material-icons-round" style="vertical-align: middle; color: var(--info-text);">pie_chart</span> ช่องทางการขาย</h3>
+              <div class="chart-container">
+                  <canvas id="chart-channel"></canvas>
+              </div>
+          </div>
+      </div>
+
+      <!-- Bottom Grid -->
+      <div class="dash-bottom-grid">
+          <!-- Top Products -->
+          <div class="card">
+              <h3><span class="material-icons-round" style="vertical-align: middle; color: #f59e0b;">emoji_events</span> สินค้าขายดี (Top Products)</h3>
+              <table style="font-size: 13px;">
+                  <thead><tr><th>สินค้า</th><th style="text-align: right;">จำนวน</th><th style="text-align: right;">ยอดรวม</th></tr></thead>
+                  <tbody id="dash-top-products">
+                      <!-- Filled by JS -->
+                  </tbody>
+              </table>
+          </div>
+
+          <!-- Payment & Recent -->
+          <div style="display: flex; flex-direction: column; gap: 24px;">
+              <div class="card" style="margin-bottom: 0;">
+                  <h3>การชำระเงิน (Payment Methods)</h3>
+                  <div style="height: 150px;">
+                      <canvas id="chart-payment"></canvas>
+                  </div>
+              </div>
+              <div class="card" style="margin-bottom: 0; flex: 1;">
+                  <h3>ออเดอร์ล่าสุด</h3>
+                  <table style="font-size: 13px;">
+                      <thead><tr><th>ID</th><th>ลูกค้า</th><th>ยอดเงิน</th><th>สถานะ</th></tr></thead>
+                      <tbody id="dash-recent-orders">
+                          <!-- Filled by JS -->
+                      </tbody>
+                  </table>
+              </div>
+          </div>
       </div>
     </div>
 
     <!-- ORDER LIST -->
     <div id="view-orders" class="hidden">
-      <div class="page-title">รายการออเดอร์ <button class="btn btn-primary" onclick="router('create')"><span class="material-icons-round">add</span> สร้างใหม่</button></div>
+      <div class="page-title">
+          รายการออเดอร์ 
+          <div style="display: flex; gap: 8px;">
+              <!-- Import Section -->
+              <input type="file" id="import-order-file" hidden onchange="handleImportOrder(this)" accept=".csv, .xlsx, .xls">
+              <button class="btn btn-success" onclick="triggerImportOrder()" title="Import CSV/Excel">
+                  <span class="material-icons-round">upload_file</span> Import รายการขาย
+              </button>
+              <button class="btn btn-outline btn-sm" style="border:none; color: var(--text-muted);" onclick="alert('โครงสร้างไฟล์ที่รองรับ:\nTimestamp, Order ID, Customer Name, Phone, Address, Channel, Payment, Product, SKU, Qty, Subtotal, Discount, Total, Status')">
+                  <span class="material-icons-round">help_outline</span>
+              </button>
+              <!-- End Import Section -->
+              <button class="btn btn-primary" onclick="router('create')"><span class="material-icons-round">add</span> สร้างใหม่</button>
+          </div>
+      </div>
       <div class="card" style="overflow: visible;">
         <div id="bulk-bar" class="bulk-action-bar">
           <div style="font-weight: 600; display: flex; align-items: center; gap: 10px;">
@@ -568,27 +802,51 @@
              </div>
           </div>
         </div>
-        <div style="display:flex; gap:12px; margin-bottom:20px;">
-          <div style="position: relative; flex: 1; max-width: 400px;">
+        <!-- Filter Section -->
+        <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap: wrap; align-items: center;">
+          <div style="position: relative; flex: 1; min-width: 200px;">
             <span class="material-icons-round" style="position: absolute; left: 12px; top: 10px; color: var(--text-light);">search</span>
             <input type="text" id="order-search" class="form-control" style="padding-left: 40px; margin-bottom: 0;" placeholder="ค้นหา ID หรือ ชื่อ..." onkeyup="renderOrders()">
           </div>
-          <select id="order-filter" class="form-control" style="width:200px; margin-bottom: 0;" onchange="renderOrders()">
-            <option value="">ทุกสถานะ</option><option value="New">New</option><option value="Paid">Paid</option><option value="Shipped">Shipped</option>
+          
+          <select id="order-filter" class="form-control" style="width:140px; margin-bottom: 0;" onchange="renderOrders()">
+            <option value="">ทุกสถานะ</option>
+            <option value="New">New</option>
+            <option value="Paid">Paid</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Imported">Imported</option>
+          </select>
+
+          <!-- Date Range Inputs -->
+          <div style="display:flex; align-items:center; gap:5px; background: #fff; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); height: 42px;">
+              <input type="date" id="filter-date-start" onchange="renderOrders()" style="border:none; outline:none; font-family:inherit; color:var(--text-main); font-size:13px; background:transparent;">
+              <span style="color:var(--text-muted);">-</span>
+              <input type="date" id="filter-date-end" onchange="renderOrders()" style="border:none; outline:none; font-family:inherit; color:var(--text-main); font-size:13px; background:transparent;">
+          </div>
+
+          <!-- Date Preset -->
+          <select onchange="applyDatePreset(this.value)" class="form-control" style="width:110px; margin-bottom: 0; cursor: pointer;">
+              <option value="">ช่วงเวลา...</option>
+              <option value="today">วันนี้</option>
+              <option value="yesterday">เมื่อวาน</option>
+              <option value="last7">7 วันล่าสุด</option>
+              <option value="thisMonth">เดือนนี้</option>
+              <option value="clear">ทั้งหมด</option>
           </select>
         </div>
+        
+        <!-- NEW ERP TABLE LAYOUT -->
         <div style="overflow-x: auto;">
-            <table>
+            <table class="table-erp">
             <thead>
                 <tr>
-                <th class="col-checkbox"><input type="checkbox" id="check-all" onclick="toggleSelectAll()" style="transform: scale(1.2); cursor: pointer;"></th>
-                <th style="width:120px;">ID</th>
-                <th style="width:100px;">วันที่</th>
-                <th style="width:180px;">ลูกค้า</th>
-                <th>รายการสินค้า</th>
-                <th style="width:120px;">ยอดสุทธิ</th>
-                <th style="width:100px;">สถานะ</th>
-                <th style="width:140px;">จัดการ</th>
+                <th class="col-checkbox" style="width: 40px;"><input type="checkbox" id="check-all" onclick="toggleSelectAll()" style="cursor: pointer;"></th>
+                <th style="width:140px; text-align: left; padding-left: 24px;">Order ID</th>
+                <th style="width:200px; text-align: left;">ลูกค้า / วันที่</th>
+                <th style="text-align: left;">รายการสินค้า</th>
+                <th style="width:120px; text-align: right; padding-right: 24px;">ยอดสุทธิ</th>
+                <th style="width:100px; text-align: center;">สถานะ</th>
+                <th style="width:100px; text-align: center;">จัดการ</th>
                 </tr>
             </thead>
             <tbody id="order-list-body"></tbody>
@@ -597,17 +855,40 @@
       </div>
     </div>
 
-    <!-- HISTORY -->
+    <!-- HISTORY (Redesigned Layout) -->
     <div id="view-history" class="hidden">
-      <div class="page-title">
-        <div>ประวัติจาก Google Sheets <span id="last-sync-time" style="font-size: 13px; font-weight: normal; color: var(--text-muted); margin-left: 10px; background: #e2e8f0; padding: 4px 10px; border-radius: 20px;"></span></div>
-        <button class="btn btn-outline" onclick="fetchHistory()"><span class="material-icons-round">refresh</span> รีเฟรชข้อมูล</button>
+      <div class="page-title" style="margin-bottom: 24px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display:flex; align-items:center; gap: 10px;">
+                <span class="material-icons-round" style="color: var(--secondary);">history</span>
+                <span>ประวัติจาก Google Sheets</span>
+            </div>
+            <div style="font-size: 13px; font-weight: normal; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                <span class="material-icons-round" style="font-size: 14px;">schedule</span> 
+                <span id="last-sync-time">รอการอัปเดต...</span>
+            </div>
+        </div>
+        <button class="btn btn-outline" onclick="fetchHistory()">
+            <span class="material-icons-round" style="color: var(--primary);">refresh</span> รีเฟรชข้อมูล
+        </button>
       </div>
-      <div class="card">
-        <table>
-          <thead><tr><th>วันที่</th><th>เลขที่</th><th>ลูกค้า</th><th>สรุปรายการ</th><th>ยอดเงิน</th><th>สถานะ</th></tr></thead>
-          <tbody id="history-list-body"></tbody>
-        </table>
+      
+      <div class="card" style="padding: 0; overflow: hidden; border: none; box-shadow: var(--shadow-sm);">
+        <div style="overflow-x: auto;">
+            <table class="table-erp">
+              <thead>
+                <tr>
+                    <th style="width:140px; text-align: left; padding-left: 24px;">วันที่ / เวลา</th>
+                    <th style="width:130px; text-align: left;">Order ID</th>
+                    <th style="width:200px; text-align: left;">ลูกค้า</th>
+                    <th style="text-align: left;">รายการสินค้า</th>
+                    <th style="width:130px; text-align: right; padding-right: 24px;">ยอดสุทธิ</th>
+                    <th style="width:110px; text-align: center;">สถานะ</th>
+                </tr>
+              </thead>
+              <tbody id="history-list-body"></tbody>
+            </table>
+        </div>
       </div>
     </div>
 
@@ -730,28 +1011,46 @@
       </div>
     </div>
 
-    <!-- PRODUCTS (UPDATED) -->
+    <!-- PRODUCTS (UPDATED LAYOUT) -->
     <div id="view-products" class="hidden">
       <div class="page-title">
-          คลังสินค้า 
+          <div style="display:flex; align-items:center; gap:10px;">
+              <span class="material-icons-round" style="color:var(--text-main);">inventory_2</span>
+              คลังสินค้า (Inventory)
+          </div>
+          
           <div style="display: flex; gap: 10px;">
               <input type="file" id="import-file" hidden onchange="handleImportCSV(this)" accept=".csv">
-              <button class="btn btn-success" onclick="triggerImport()"><span class="material-icons-round">upload_file</span> Import CSV</button>
+              <button class="btn btn-outline" onclick="triggerImport()"><span class="material-icons-round">upload_file</span> Import CSV</button>
               <button class="btn btn-primary" onclick="openProductModal()"><span class="material-icons-round">add</span> เพิ่มสินค้า</button>
           </div>
       </div>
-      <div class="card">
-        <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 10px;">
-            <div style="margin-bottom: 0; max-width: 400px; position: relative; flex: 1;">
+
+      <div class="card" style="padding: 0; overflow: hidden; border: none; box-shadow: var(--shadow-sm);">
+        <!-- Filter Bar -->
+        <div style="padding: 20px; border-bottom: 1px solid var(--border); background: #fff;">
+            <div style="max-width: 500px; position: relative;">
                 <span class="material-icons-round" style="position: absolute; left: 12px; top: 10px; color: var(--text-light);">search</span>
-                <input type="text" id="prod-search" class="form-control" style="padding-left: 40px; margin-bottom: 0;" placeholder="ค้นหา SKU, ชื่อ หรือ Barcode..." onkeyup="renderProducts()">
+                <input type="text" id="prod-search" class="form-control" style="padding-left: 40px; margin-bottom: 0;" placeholder="ค้นหา SKU / ชื่อสินค้า / Barcode..." onkeyup="renderProducts()">
             </div>
         </div>
-        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">*Import รองรับไฟล์ .csv คอลัมน์: SKU, Name, Price, Barcode, Image</div>
-        <table>
-          <thead><tr><th style="width:60px;">IMG</th><th>SKU</th><th>Barcode</th><th>ชื่อสินค้า</th><th>ราคา</th><th>จัดการ</th></tr></thead>
-          <tbody id="product-list-body"></tbody>
-        </table>
+
+        <!-- Inventory Table -->
+        <div style="overflow-x: auto;">
+            <table class="table-erp">
+              <thead>
+                <tr>
+                    <th style="width: 80px; text-align: center;">IMG</th>
+                    <th style="width: 120px; text-align: left;">SKU</th>
+                    <th style="width: 140px; text-align: left;">Barcode</th>
+                    <th style="text-align: left;">ชื่อสินค้า</th>
+                    <th style="width: 120px; text-align: right;">ราคา</th>
+                    <th style="width: 240px; text-align: center;">การจัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="product-list-body"></tbody>
+            </table>
+        </div>
       </div>
     </div>
 
@@ -772,6 +1071,92 @@
   <div id="detail-modal" class="modal-overlay hidden" onclick="closeModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div id="detail-dynamic-content"></div>
+    </div>
+  </div>
+
+  <!-- Barcode Print Modal (NEW UI) -->
+  <div id="barcode-modal" class="modal-overlay hidden" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()" style="max-width:550px; padding: 0;">
+      <div class="modal-header">
+          <div style="display:flex; align-items:center; gap:10px;">
+              <span class="material-icons-round" style="color:var(--text-main);">print</span>
+              <h3 style="margin:0; font-size:18px;">พิมพ์บาร์โค้ดสินค้า</h3>
+          </div>
+          <button style="background:none; border:none; cursor:pointer; color:var(--text-muted);" onclick="closeModal(null, true)"><span class="material-icons-round">close</span></button>
+      </div>
+      <div class="modal-body" style="padding: 24px; background: #f9fafb;">
+        
+        <!-- Preview Section -->
+        <div id="barcode-preview-container" class="barcode-preview-box">
+            <div class="barcode-image-container">
+                 <img id="bc-prev-img" src="" alt="Product" style="display:none;" />
+                 <div id="bc-no-img" class="barcode-image-placeholder hidden">ไม่มีรูปสินค้า</div>
+            </div>
+            <div class="barcode-info-container">
+                <div style="font-weight:700; font-size:16px; margin-bottom:4px;" id="bc-prev-name">Product Name</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:15px;" id="bc-prev-sku">SKU: A001</div>
+                <div class="barcode-bars"></div>
+                <div class="barcode-text" id="bc-prev-code">8850000000000</div>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <!-- Format Options -->
+            <div class="option-group">
+                <div class="option-title">รูปแบบเอกสาร</div>
+                <div class="radio-pill-group">
+                    <label class="radio-pill active">
+                        <input type="radio" name="bc_layout" value="label" checked> ทั่วไป (ฉลาก)
+                    </label>
+                    <label class="radio-pill">
+                        <input type="radio" name="bc_layout" value="a4"> A4
+                    </label>
+                </div>
+            </div>
+
+            <!-- Size Options -->
+            <div class="option-group">
+                <div class="option-title">ขนาดฉลาก</div>
+                <div class="radio-pill-group">
+                    <label class="radio-pill">
+                        <input type="radio" name="bc_size" value="sm"> เล็ก
+                    </label>
+                    <label class="radio-pill active">
+                        <input type="radio" name="bc_size" value="md" checked> กลาง
+                    </label>
+                    <label class="radio-pill">
+                        <input type="radio" name="bc_size" value="lg"> ใหญ่
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Options -->
+        <div class="option-group" style="margin-top:10px;">
+            <div class="option-title">เนื้อหาในบาร์โค้ด</div>
+            <div style="display:flex; gap:15px; font-size:13px;">
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" id="bc-opt-barcode" checked disabled> Barcode
+                </label>
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" id="bc-opt-sku" checked> SKU
+                </label>
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" id="bc-opt-name" checked> ชื่อสินค้า
+                </label>
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" id="bc-opt-price"> ราคา
+                </label>
+            </div>
+        </div>
+
+      </div>
+      <div class="modal-footer" style="background: white;">
+          <button class="btn btn-outline" onclick="closeModal(null, true)" style="min-width: 100px;">ยกเลิก</button>
+          <button class="btn btn-primary" onclick="printBarcodeAction()" style="min-width: 150px; height: 42px; font-size: 15px;">
+              <span class="material-icons-round">print</span> พิมพ์บาร์โค้ด
+          </button>
+      </div>
     </div>
   </div>
 
@@ -802,8 +1187,26 @@
         <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">ราคาขาย (บาท)</label>
         <input type="number" id="p-price" class="form-control" placeholder="0.00">
 
-        <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">ลิงก์รูปภาพ (Image URL)</label>
-        <input type="text" id="p-image" class="form-control" placeholder="https://..." onchange="previewImage(this.value)">
+        <!-- Modified Image Selection -->
+        <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-top: 10px; display:block;">รูปภาพสินค้า (Image Source)</label>
+        <div style="display: flex; gap: 15px; margin-bottom: 8px;">
+            <label style="font-size: 13px; cursor: pointer; display: flex; align-items: center;"><input type="radio" name="img_src" value="url" checked onchange="setImgMode(this.value)"> &nbsp;URL</label>
+            <label style="font-size: 13px; cursor: pointer; display: flex; align-items: center;"><input type="radio" name="img_src" value="upload" onchange="setImgMode(this.value)"> &nbsp;Upload</label>
+            <label style="font-size: 13px; cursor: pointer; display: flex; align-items: center;"><input type="radio" name="img_src" value="drive" onchange="setImgMode(this.value)"> &nbsp;Drive</label>
+        </div>
+
+        <div id="mode-url">
+            <input type="text" id="p-image" class="form-control" placeholder="https://..." onchange="previewImage(this.value)">
+        </div>
+        <div id="mode-upload" class="hidden">
+            <input type="file" id="inp-upload" class="form-control" accept="image/*" onchange="readUpload(this)">
+            <div style="font-size: 11px; color: #f59e0b;">*ไฟล์จะถูกแปลงเป็นข้อความ (Base64)</div>
+        </div>
+        <div id="mode-drive" class="hidden">
+            <input type="text" id="inp-drive" class="form-control" placeholder="วางลิงก์ Google Drive..." onchange="readDrive(this.value)">
+            <div style="font-size: 11px; color: var(--text-muted);">*ต้องเป็นลิงก์ที่เปิดสิทธิ์สาธารณะ (Public/Anyone with link)</div>
+        </div>
+        <!-- End Modified Image Selection -->
         
         <div style="margin-top: 10px; text-align: center; background: #f8fafc; border: 1px dashed var(--border); padding: 10px; border-radius: 8px;">
             <img id="p-preview" src="" alt="Preview" style="max-height: 120px; display: none; margin: 0 auto; border-radius: 6px;">
@@ -837,6 +1240,10 @@
       history: []
     };
 
+    // --- Dashboard State ---
+    let dashboardState = { period: 'today', showImported: true };
+    let dashboardCharts = {};
+
     // --- Safety Check for LocalStorage ---
     try {
       const savedOrders = localStorage.getItem('oms_orders');
@@ -866,7 +1273,37 @@
     let currentPackItems = []; // Store packing state {sku, name, needed, scanned}
 
     // ============================================
-    // 1. HELPER FUNCTIONS
+    // 1. ROUTER FUNCTION
+    // ============================================
+    function router(view, el) {
+      document.querySelectorAll('main > div').forEach(v => v.classList.add('hidden'));
+      document.getElementById('view-' + view).classList.remove('hidden');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      if(el) el.classList.add('active');
+      
+      if(view === 'dashboard') renderDashboard();
+      if(view === 'orders') renderOrders();
+      if(view === 'packing') renderPacking();
+      if(view === 'products') renderProducts();
+      if(view === 'customers') renderCustomers();
+      if(view === 'history') fetchHistory();
+      
+      if(view === 'create' && !editingOrderId) {
+        document.getElementById('create-title').innerText = "สร้างออเดอร์ใหม่";
+        document.getElementById('btn-save').innerText = "บันทึกออเดอร์";
+        document.getElementById('btn-save').className = "btn btn-primary btn-lg";
+        document.getElementById('in-name').value = '';
+        document.getElementById('in-phone').value = '';
+        document.getElementById('in-address').value = '';
+        document.getElementById('form-discount-input').value = 0;
+        document.getElementById('form-items-container').innerHTML = '';
+        addFormRow();
+        calcTotal();
+      }
+    }
+
+    // ============================================
+    // 2. HELPER FUNCTIONS
     // ============================================
     function safeDate(dateStr, withTime = false) {
       if (!dateStr) return "-";
@@ -902,25 +1339,275 @@
     }
 
     // ============================================
-    // 2. CORE FUNCTIONS & LOGIC
+    // 3. CORE FUNCTIONS & LOGIC
     // ============================================
     
     // --- Dashboard & Renderers ---
+    function setDashFilter(period) {
+        dashboardState.period = period;
+        // Update Buttons
+        document.querySelectorAll('.dash-filter-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('filter-' + period).classList.add('active');
+        renderDashboard();
+    }
+
     function renderDashboard() {
-      const sales = db.orders.reduce((s, o) => s + (Number(o.total)||0), 0);
-      document.getElementById('stat-sales').innerText = `฿${sales.toLocaleString()}`;
-      document.getElementById('stat-total').innerText = db.orders.length;
-      document.getElementById('stat-pending').innerText = db.orders.filter(o => o.status !== 'Shipped').length;
-      document.getElementById('recent-orders-body').innerHTML = db.orders.slice(0, 5).map(o => `<tr><td><b>${o.id}</b></td><td>${o.name}</td><td style="font-size: 11px; color: #444; white-space: pre-wrap;">${o.items_summary || '-'}</td><td>฿${(Number(o.total)||0).toLocaleString()}</td><td><span class="badge badge-${o.status}">${o.status}</span></td></tr>`).join('');
+      // 1. Update State from Controls
+      dashboardState.showImported = document.getElementById('dash-include-import').checked;
+
+      // 2. Filter Data
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const weekStart = new Date(now.setDate(now.getDate() - now.getDay())).setHours(0,0,0,0);
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+      let filteredOrders = db.orders.filter(o => {
+          if (!dashboardState.showImported && o.order_source === 'imported') return false;
+          
+          const oDate = new Date(o.date).getTime();
+          if (dashboardState.period === 'today') return oDate >= todayStart;
+          if (dashboardState.period === 'week') return oDate >= weekStart;
+          if (dashboardState.period === 'month') return oDate >= monthStart;
+          return true;
+      });
+
+      // 3. Calculate KPIs
+      const totalSales = filteredOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+      const totalOrders = filteredOrders.length;
+      const uniqueCust = new Set(filteredOrders.map(o => o.phone || o.name)).size;
+      const shippedCount = filteredOrders.filter(o => o.status === 'Shipped').length;
+      const aov = totalOrders > 0 ? totalSales / totalOrders : 0;
+
+      // Update KPI DOM
+      document.getElementById('kpi-sales').innerText = '฿' + totalSales.toLocaleString();
+      document.getElementById('kpi-orders').innerText = totalOrders.toLocaleString();
+      document.getElementById('kpi-customers').innerText = uniqueCust.toLocaleString();
+      document.getElementById('kpi-shipped').innerText = shippedCount.toLocaleString();
+      document.getElementById('kpi-aov').innerText = '฿' + Math.round(aov).toLocaleString();
+
+      // 4. Charts Preparation
+      // Sales Trend (Date Grouping)
+      const salesByDate = {};
+      filteredOrders.forEach(o => {
+          const d = new Date(o.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+          salesByDate[d] = (salesByDate[d] || 0) + (Number(o.total) || 0);
+      });
+      
+      // Channel
+      const byChannel = {};
+      filteredOrders.forEach(o => { byChannel[o.channel || 'Other'] = (byChannel[o.channel || 'Other'] || 0) + 1; });
+
+      // Payment
+      const byPayment = {};
+      filteredOrders.forEach(o => { byPayment[o.payment || 'Other'] = (byPayment[o.payment || 'Other'] || 0) + 1; });
+
+      // 5. Render Charts
+      renderChart('chart-trend', 'line', Object.keys(salesByDate), Object.values(salesByDate), 'ยอดขาย (บาท)', '#4f46e5');
+      renderChart('chart-channel', 'bar', Object.keys(byChannel), Object.values(byChannel), 'จำนวนออเดอร์', '#0ea5e9');
+      renderChart('chart-payment', 'doughnut', Object.keys(byPayment), Object.values(byPayment), 'Payment', ['#10b981', '#f59e0b', '#6366f1', '#ec4899']);
+
+      // 6. Top Products
+      const productStats = {};
+      filteredOrders.forEach(o => {
+          if (o.items && Array.isArray(o.items)) {
+              o.items.forEach(i => {
+                  const key = i.name;
+                  if(!productStats[key]) productStats[key] = { qty: 0, total: 0 };
+                  productStats[key].qty += (Number(i.qty) || 0);
+                  productStats[key].total += (Number(i.qty) * Number(i.price || 0));
+              });
+          }
+      });
+      const topProducts = Object.entries(productStats)
+          .sort((a, b) => b[1].qty - a[1].qty)
+          .slice(0, 5); // Top 5
+
+      document.getElementById('dash-top-products').innerHTML = topProducts.length ? topProducts.map(([name, stat]) => `
+          <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #eee;">${name}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${stat.qty}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">฿${stat.total.toLocaleString()}</td>
+          </tr>
+      `).join('') : '<tr><td colspan="3" style="text-align:center; padding:10px;">ไม่มีข้อมูล</td></tr>';
+
+      // 7. Recent Orders (Only Imported/Filtered context)
+      const recent = filteredOrders.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+      document.getElementById('dash-recent-orders').innerHTML = recent.length ? recent.map(o => `
+          <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                  <b>${o.id}</b> 
+                  ${o.order_source==='imported' ? '<span style="font-size:9px; background:#f3e8ff; color:#7e22ce; padding:2px 4px; border-radius:4px;">Imp</span>' : ''}
+              </td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee;">${o.name}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee;">฿${(Number(o.total)||0).toLocaleString()}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                  <span class="badge badge-${o.status}" style="transform:scale(0.8); transform-origin:left;">${o.status}</span>
+              </td>
+          </tr>
+      `).join('') : '<tr><td colspan="4" style="text-align:center; padding:10px;">ไม่มีข้อมูล</td></tr>';
+    }
+
+    // Chart Helper
+    function renderChart(canvasId, type, labels, data, label, color) {
+        if (dashboardCharts[canvasId]) { dashboardCharts[canvasId].destroy(); }
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        
+        dashboardCharts[canvasId] = new Chart(ctx, {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: data,
+                    backgroundColor: Array.isArray(color) ? color : color + '80', // Opacity for bars
+                    borderColor: Array.isArray(color) ? color : color,
+                    borderWidth: 1,
+                    tension: 0.3,
+                    fill: type === 'line'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: type === 'doughnut' } },
+                scales: type === 'doughnut' ? {} : { y: { beginAtZero: true } }
+            }
+        });
+    }
+
+    // New Function for Date Presets
+    function applyDatePreset(preset) {
+        const startEl = document.getElementById('filter-date-start');
+        const endEl = document.getElementById('filter-date-end');
+        const now = new Date();
+        
+        let start = null;
+        let end = null;
+
+        const formatDate = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        if (preset === 'today') {
+            start = new Date(now);
+            end = new Date(now);
+        } else if (preset === 'yesterday') {
+            start = new Date(now);
+            start.setDate(now.getDate() - 1);
+            end = new Date(start);
+        } else if (preset === 'last7') {
+            end = new Date(now);
+            start = new Date(now);
+            start.setDate(now.getDate() - 7);
+        } else if (preset === 'thisMonth') {
+            start = new Date(now.getFullYear(), now.getMonth(), 1);
+            end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        } else if (preset === 'clear') {
+            startEl.value = '';
+            endEl.value = '';
+            renderOrders();
+            return;
+        }
+
+        if (start && end) {
+            startEl.value = formatDate(start);
+            endEl.value = formatDate(end);
+            renderOrders();
+        }
     }
 
     function renderOrders() {
       const search = document.getElementById('order-search').value.toLowerCase();
       const filter = document.getElementById('order-filter').value;
-      const filtered = db.orders.filter(o => (o.id.toLowerCase().includes(search) || o.name.toLowerCase().includes(search)) && (!filter || o.status === filter));
+      const dateStart = document.getElementById('filter-date-start').value;
+      const dateEnd = document.getElementById('filter-date-end').value;
+      
+      const filtered = db.orders.filter(o => {
+          // 1. Search Logic
+          const matchesSearch = o.id.toLowerCase().includes(search) || o.name.toLowerCase().includes(search);
+          
+          // 2. Status/Source Logic
+          let matchesFilter = true;
+          if (filter === 'Imported') {
+              matchesFilter = o.order_source === 'imported';
+          } else if (filter) {
+              matchesFilter = o.status === filter;
+          }
+
+          // 3. Date Logic (New)
+          let matchesDate = true;
+          if (dateStart || dateEnd) {
+              const oDate = new Date(o.date).setHours(0,0,0,0);
+              if (dateStart) {
+                  const sDate = new Date(dateStart).setHours(0,0,0,0);
+                  if (oDate < sDate) matchesDate = false;
+              }
+              if (dateEnd && matchesDate) {
+                  const eDate = new Date(dateEnd).setHours(0,0,0,0);
+                  if (oDate > eDate) matchesDate = false;
+              }
+          }
+
+          return matchesSearch && matchesFilter && matchesDate;
+      });
+
+      // --- NEW TABLE RENDER LOGIC (ERP STYLE) ---
       document.getElementById('order-list-body').innerHTML = filtered.map(o => {
-        let displaySummary = o.items_summary || (o.items && Array.isArray(o.items) ? o.items.map((i, idx) => `${idx + 1}. ${i.name} [${i.sku || '-'}] x${i.qty}`).join("\n") : '-');
-        return `<tr><td class="col-checkbox"><input type="checkbox" class="order-checkbox" value="${o.id}" onchange="updateBulk()"></td><td><b>${o.id}</b></td><td>${safeDate(o.date)}</td><td>${o.name}</td><td style="font-size: 12px; color: #444; white-space: pre-wrap;">${displaySummary}</td><td>฿${(Number(o.total)||0).toLocaleString()}</td><td><span class="badge badge-${o.status}">${o.status}</span></td><td><div style="display:flex; gap:5px;"><button class="btn btn-outline btn-sm" onclick="openDetail('${o.id}')">ดู</button><button class="btn btn-warning btn-sm" onclick="editOrder('${o.id}')"><span class="material-icons-round" style="font-size:14px">edit</span></button><button class="btn btn-danger btn-sm" onclick="deleteOrder('${o.id}')"><span class="material-icons-round" style="font-size:14px">delete</span></button></div></td></tr>`;
+        // Product List Logic
+        let itemsHtml = '';
+        if (o.items && Array.isArray(o.items) && o.items.length > 0) {
+            itemsHtml = o.items.map(i => `
+                <div class="erp-item">
+                    <span class="erp-item-name">${i.name}</span>
+                    <span class="erp-item-sku">${i.sku || ''}</span>
+                    <span class="erp-item-qty">×${Number(i.qty).toLocaleString()}</span>
+                </div>
+            `).join('');
+        } else {
+            itemsHtml = `<span class="text-secondary text-xs">- No Items -</span>`;
+        }
+
+        // Imported Badge
+        const isImported = o.order_source === 'imported';
+        const badgeHtml = isImported ? '<span class="badge badge-Imported" style="font-size:10px; margin-left:4px;">IMP</span>' : '';
+        
+        // Actions Logic (Same logic, new style)
+        const isLocked = isImported; // Imported orders are read-only
+
+        return `
+        <tr>
+            <td class="col-checkbox"><input type="checkbox" class="order-checkbox" value="${o.id}" onchange="updateBulk()"></td>
+            <td>
+                <div class="font-mono fw-bold text-dark" style="font-size:15px;">${o.id}</div>
+                ${badgeHtml}
+            </td>
+            <td>
+                <div class="fw-bold text-dark" style="margin-bottom:2px;">${o.name}</div>
+                <div class="text-secondary text-xs"><span class="material-icons-round" style="font-size:12px; vertical-align:middle; margin-right:2px;">event</span>${safeDate(o.date, true)}</div>
+            </td>
+            <td>
+                ${itemsHtml}
+            </td>
+            <td class="text-end">
+                <div class="fw-bold text-dark" style="font-size:15px;">฿${(Number(o.total)||0).toLocaleString()}</div>
+            </td>
+            <td style="text-align:center;">
+                <span class="badge badge-${o.status}" style="font-size:10px; font-weight:700;">${o.status}</span>
+            </td>
+            <td style="text-align:center;">
+                <div style="display:flex; justify-content:center; gap:2px;">
+                    <button class="action-btn" onclick="openDetail('${o.id}')" title="View"><span class="material-icons-round" style="font-size:18px">visibility</span></button>
+                    ${isLocked ? 
+                        `<span style="padding:6px; color:#cbd5e1; cursor:not-allowed;" title="Read-only"><span class="material-icons-round" style="font-size:18px">lock</span></span>` : 
+                        `<button class="action-btn" onclick="editOrder('${o.id}')" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>
+                         <button class="action-btn delete" onclick="deleteOrder('${o.id}')" title="Delete"><span class="material-icons-round" style="font-size:18px">delete</span></button>`
+                    }
+                </div>
+            </td>
+        </tr>`;
       }).join('');
     }
 
@@ -933,19 +1620,33 @@
       );
       
       document.getElementById('product-list-body').innerHTML = filtered.map(p => {
-        const imgHtml = p.image ? `<img src="${p.image}" style="width:36px; height:36px; object-fit:cover; border-radius:4px; border:1px solid #ddd;">` : `<div style="width:36px; height:36px; background:#f1f5f9; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#cbd5e1;"><span class="material-icons-round" style="font-size:18px;">image</span></div>`;
-        const barcodeHtml = p.barcode ? `<div style="font-size:11px; color:#666;">${p.barcode}</div>` : '-';
+        const imgHtml = p.image ? `<img src="${p.image}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #e2e8f0;">` : `<div style="width:40px; height:40px; background:#f1f5f9; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#cbd5e1; border:1px solid #e2e8f0;"><span class="material-icons-round" style="font-size:20px;">image</span></div>`;
+        const barcodeHtml = p.barcode ? `<div class="font-mono text-dark" style="font-size:13px;">${p.barcode}</div>` : '<span style="color:#cbd5e1; font-size:12px;">-</span>';
+        
         return `
             <tr>
-                <td>${imgHtml}</td>
-                <td><span style="font-weight:600;">${p.sku}</span></td>
-                <td>${barcodeHtml}</td>
-                <td>${p.name}</td>
-                <td>฿${Number(p.price).toLocaleString()}</td>
-                <td>
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn btn-warning btn-sm" onclick="openProductModal('${p.sku}')">Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="delProd('${p.sku}')">ลบ</button>
+                <td style="text-align: center; vertical-align: middle;">${imgHtml}</td>
+                <td style="text-align: left; vertical-align: middle;">
+                    <span class="font-mono fw-bold text-dark" style="font-size:13px;">${p.sku}</span>
+                </td>
+                <td style="text-align: left; vertical-align: middle;">${barcodeHtml}</td>
+                <td style="text-align: left; vertical-align: middle;">
+                    <div style="font-size:13px; color:#1e293b; line-height:1.4;">${p.name}</div>
+                </td>
+                <td style="text-align: right; vertical-align: middle;">
+                    <span class="fw-bold text-dark">฿${Number(p.price).toLocaleString()}</span>
+                </td>
+                <td style="text-align: center; vertical-align: middle;">
+                    <div style="display:flex; justify-content:center; gap:8px;">
+                        <button class="btn btn-primary" style="padding:6px 12px; font-size:12px; height:32px; border-radius:6px;" onclick="openBarcodeModal('${p.sku}')">
+                            <span class="material-icons-round" style="font-size:16px;">qr_code_2</span> พิมพ์บาร์โค้ด
+                        </button>
+                        <button class="action-btn" onclick="openProductModal('${p.sku}')" title="Edit" style="background:#f1f5f9;">
+                            <span class="material-icons-round" style="font-size:18px; color:#475569;">edit</span>
+                        </button>
+                        <button class="action-btn delete" onclick="delProd('${p.sku}')" title="Delete" style="background:#fee2e2;">
+                            <span class="material-icons-round" style="font-size:18px; color:#ef4444;">delete</span>
+                        </button>
                     </div>
                 </td>
             </tr>`;
@@ -958,7 +1659,83 @@
     }
 
     function renderHistory() { 
-      document.getElementById('history-list-body').innerHTML = db.history.map(o => `<tr><td>${safeDate(o.date)}</td><td><b>${o.id}</b></td><td>${o.name}</td><td style="font-size: 12px; color: #444; white-space: pre-wrap;">${o.items_summary || '-'}</td><td>฿${(Number(o.total)||0).toLocaleString()}</td><td><span class="badge badge-${o.status}">${o.status}</span></td></tr>`).join(''); 
+      const tbody = document.getElementById('history-list-body');
+      
+      if (!db.history || db.history.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 60px 20px; color: var(--text-muted);">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+                <span class="material-icons-round" style="font-size:40px; color:#cbd5e1;">history_toggle_off</span>
+                <span>ไม่พบข้อมูลประวัติย้อนหลัง</span>
+            </div>
+          </td></tr>`;
+          return;
+      }
+
+      tbody.innerHTML = db.history.map(o => {
+          // Date Formatting Logic (Improved for Sheets)
+          // 1. Check multiple keys for date
+          let rawDate = o.date || o.timestamp || o.Timestamp;
+          let d = new Date(rawDate);
+          
+          // 2. Handle dd/mm/yyyy format if default parsing fails
+          if (isNaN(d.getTime()) && typeof rawDate === 'string') {
+              // Try parsing format like "15/02/2026 10:30:00"
+              const parts = rawDate.split(/[\s/:-]/); 
+              if (parts.length >= 3) {
+                  // Assume dd/mm/yyyy
+                  const day = parseInt(parts[0]);
+                  const month = parseInt(parts[1]) - 1; // Month is 0-indexed
+                  const year = parseInt(parts[2]);
+                  const hour = parts[3] ? parseInt(parts[3]) : 0;
+                  const min = parts[4] ? parseInt(parts[4]) : 0;
+                  
+                  if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                      d = new Date(year, month, day, hour, min);
+                  }
+              }
+          }
+
+          const isValid = !isNaN(d.getTime());
+          const dateStr = isValid ? d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }) : '<span style="color:#94a3b8; font-weight:normal;">ไม่ระบุ</span>';
+          const timeStr = isValid ? d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '';
+
+          // Status Badge Logic (Simple mapping)
+          let statusColor = '#e2e8f0'; let statusText = '#475569';
+          if (o.status === 'Paid') { statusColor = '#dcfce7'; statusText = '#166534'; }
+          else if (o.status === 'Shipped') { statusColor = '#fef3c7'; statusText = '#92400e'; }
+          else if (o.status === 'New') { statusColor = '#e0f2fe'; statusText = '#075985'; }
+
+          // Item formatting
+          let itemsHtml = '<span style="color:#cbd5e1">-</span>';
+          if (o.items_summary) {
+              const lines = o.items_summary.split('\n').filter(l => l.trim() !== '');
+              itemsHtml = lines.map(line => `<div style="display:flex; align-items:start; margin-bottom:3px;"><span style="color:#cbd5e1; margin-right:6px; font-size:10px; margin-top:3px;">●</span><span>${line}</span></div>`).join('');
+          }
+
+          return `
+            <tr>
+                <td style="vertical-align: top; text-align: left; padding-left: 24px;">
+                    <div style="font-weight: 600; color: var(--text-main); font-size: 13px;">${dateStr}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${timeStr}</div>
+                </td>
+                <td style="vertical-align: top; text-align: left;">
+                    <div class="font-mono fw-bold text-dark" style="font-size:14px;">${o.id}</div>
+                </td>
+                <td style="vertical-align: top; text-align: left;">
+                    <div style="font-weight: 500; font-size: 13px; color: #1e293b;">${o.name}</div>
+                </td>
+                <td style="vertical-align: top; text-align: left;">
+                    <div style="font-size: 13px; color: #334155; line-height: 1.5;">${itemsHtml}</div>
+                </td>
+                <td style="vertical-align: top; text-align: right; padding-right: 24px;">
+                    <div class="fw-bold text-dark" style="font-size:14px;">฿${(Number(o.total)||0).toLocaleString()}</div>
+                </td>
+                <td style="vertical-align: top; text-align: center;">
+                    <span class="badge" style="background:${statusColor}; color:${statusText}; font-weight:600; padding:4px 10px; border-radius:6px; font-size:11px;">${o.status}</span>
+                </td>
+            </tr>
+          `;
+      }).join(''); 
     }
 
     function updateBulk() { 
@@ -975,251 +1752,105 @@
       updateBulk(); 
     }
 
-    // --- Order Operations ---
-    async function deleteOrder(id) {
-        if (!confirm(`ต้องการลบออเดอร์ ${id} ใช่หรือไม่?`)) return;
-        showToast("กำลังลบข้อมูล...", 0);
-        try {
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete', id: id }) });
-            db.orders = db.orders.filter(o => o.id !== id);
-            save(); renderOrders(); renderDashboard();
-            showToast("ลบออเดอร์เรียบร้อยแล้ว", 2000); fetchHistory();
-        } catch (e) { alert("เกิดข้อผิดพลาดในการลบ: " + e.message); }
+    // --- Order Import Logic (NEW) ---
+    function triggerImportOrder() {
+        document.getElementById('import-order-file').click();
     }
 
-    function editOrder(id) {
-        const order = db.orders.find(o => o.id === id);
-        if (!order) return;
-        editingOrderId = id;
-        document.getElementById('in-phone').value = order.phone || '';
-        document.getElementById('in-name').value = order.name || '';
-        document.getElementById('in-address').value = order.address || '';
-        document.getElementById('in-channel').value = order.channel || 'Facebook';
-        document.getElementById('in-payment').value = order.payment || 'Transfer';
-        document.getElementById('in-status').value = order.status || 'New';
-        document.getElementById('form-discount-input').value = order.discount || 0;
-        document.getElementById('form-discount-type').value = 'THB';
-        const container = document.getElementById('form-items-container');
-        container.innerHTML = '';
-        if (order.items && order.items.length > 0) {
-            order.items.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'item-list-row';
-                div.innerHTML = `<input type="text" class="form-control item-name" list="prod-list" placeholder="สินค้า" value="${item.name}" onchange="syncRow(this)"><input type="text" class="form-control item-sku" placeholder="SKU" value="${item.sku || ''}"><input type="number" class="form-control item-qty" value="${item.qty}" onchange="calcTotal()"><input type="number" class="form-control item-price" placeholder="ราคา" value="${item.price}" onchange="calcTotal()"><button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); calcTotal()">✕</button><datalist id="prod-list">${db.products.map(p => `<option value="${p.name}">${p.sku}</option>`).join('')}</datalist>`;
-                container.appendChild(div);
-            });
-        } else { addFormRow(); }
-        calcTotal();
-        document.getElementById('create-title').innerText = `แก้ไขออเดอร์ ${id}`;
-        document.getElementById('btn-save').innerText = "บันทึกการแก้ไข (Update)";
-        document.getElementById('btn-save').className = "btn btn-warning btn-lg";
-        router('create');
-    }
-
-    async function handleSaveOrder(e) {
-      e.preventDefault();
-      const btn = document.getElementById('btn-save');
-      btn.disabled = true; btn.innerText = "กำลังบันทึก...";
-      const subtotal = parseFloat(document.getElementById('form-subtotal').innerText.replace(/,/g, ''));
-      const total = parseFloat(document.getElementById('form-total').innerText.replace(/,/g, ''));
-      showToast("กำลังบันทึก...", 0);
-      const items = [];
-      document.querySelectorAll('.item-list-row').forEach(row => {
-        const name = row.querySelector('.item-name').value;
-        if(name) items.push({ name, sku: row.querySelector('.item-sku').value || '-', qty: parseFloat(row.querySelector('.item-qty').value) || 1, price: parseFloat(row.querySelector('.item-price').value) || 0 });
-      });
-      if (items.length === 0) { alert("กรุณาเพิ่มรายการสินค้า"); btn.disabled = false; btn.innerText = "บันทึกออเดอร์"; return; }
-      const orderId = editingOrderId ? editingOrderId : generateNextOrderId();
-      const baseData = { action: editingOrderId ? 'update' : 'create', id: orderId, date: new Date().toISOString(), name: document.getElementById('in-name').value, phone: document.getElementById('in-phone').value, address: document.getElementById('in-address').value, channel: document.getElementById('in-channel').value, payment: document.getElementById('in-payment').value, status: document.getElementById('in-status').value, subtotal: subtotal, discount: subtotal - total, total: total, items: items };
-      try {
-        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(baseData) });
-        const orderForLocal = { ...baseData, items_summary: items.map((i, idx) => `${idx + 1}. ${i.name} [${i.sku}] x${i.qty}`).join("\n") };
-        if (editingOrderId) {
-            const idx = db.orders.findIndex(o => o.id === editingOrderId);
-            if (idx !== -1) db.orders[idx] = orderForLocal;
-        } else { db.orders.unshift(orderForLocal); }
-        save(); editingOrderId = null; router('orders');
-        showToast("บันทึกเรียบร้อย", 2000); setTimeout(fetchHistory, 1000);
-      } catch(e) { save(); router('orders'); } finally { btn.disabled = false; btn.innerText = "บันทึกออเดอร์"; }
-    }
-
-    // --- Form Helpers ---
-    function addFormRow() {
-      const div = document.createElement('div');
-      div.className = 'item-list-row';
-      div.innerHTML = `<input type="text" class="form-control item-name" list="prod-list" placeholder="สินค้า" onchange="syncRow(this)"><input type="text" class="form-control item-sku" placeholder="SKU"><input type="number" class="form-control item-qty" value="1" onchange="calcTotal()"><input type="number" class="form-control item-price" placeholder="ราคา" onchange="calcTotal()"><button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); calcTotal()">✕</button><datalist id="prod-list">${db.products.map(p => `<option value="${p.name}">${p.sku}</option>`).join('')}</datalist>`;
-      document.getElementById('form-items-container').appendChild(div);
-    }
-
-    function syncRow(el) {
-      const p = db.products.find(x => x.name === el.value);
-      if(p) { const row = el.parentElement; row.querySelector('.item-sku').value = p.sku; row.querySelector('.item-price').value = p.price; calcTotal(); }
-    }
-
-    function calcTotal() {
-      let subtotal = 0;
-      document.querySelectorAll('.item-list-row').forEach(row => { subtotal += (parseFloat(row.querySelector('.item-qty').value) || 0) * (parseFloat(row.querySelector('.item-price').value) || 0); });
-      const discInput = parseFloat(document.getElementById('form-discount-input').value) || 0;
-      const total = subtotal - (document.getElementById('form-discount-type').value === 'Percent' ? subtotal * (discInput / 100) : discInput);
-      document.getElementById('form-subtotal').innerText = subtotal.toLocaleString();
-      document.getElementById('form-total').innerText = total.toLocaleString();
-    }
-
-    function autoFillCust() { 
-      const ph = document.getElementById('in-phone').value; 
-      const found = db.orders.find(o => o.phone === ph); 
-      if(found) { 
-        document.getElementById('in-name').value = found.name; 
-        document.getElementById('in-address').value = found.address; 
-        showToast("ดึงข้อมูลลูกค้าเดิมแล้ว"); 
-      } 
-    }
-
-    // --- Sync ---
-    async function fetchHistory(isAuto = false) {
-      if(!isAuto) showToast("กำลังดึงข้อมูลล่าสุดจาก Sheet...", 0);
-      try {
-        const res = await fetch(SCRIPT_URL + "?action=getHistory");
-        const data = await res.json();
-        db.history = Array.isArray(data) ? data.filter(x => x.id && x.id !== 'id') : [];
-        const syncEl = document.getElementById('last-sync-time');
-        if(syncEl) syncEl.innerText = `อัปเดตเมื่อ: ${new Date().toLocaleTimeString()}`;
-        renderHistory();
-        if(!isAuto) showToast("อัปเดตข้อมูลแล้ว", 2000);
-      } catch(e) { if(!isAuto) showToast("ไม่สามารถดึงข้อมูลได้", 3000); }
-    }
-
-    // --- Product Import & Edit Logic (NEW) ---
-    function triggerImport() {
-        document.getElementById('import-file').click();
-    }
-
-    function handleImportCSV(input) {
+    function handleImportOrder(input) {
         const file = input.files[0];
         if (!file) return;
 
         const reader = new FileReader();
         reader.onload = function(e) {
-            const text = e.target.result;
-            const lines = text.split('\n');
-            let addedCount = 0;
-            
-            // Skip header (index 0) if exists, or assume no header?
-            // Assuming header: SKU, Name, Price, Barcode, Image
-            
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-                
-                // Simple CSV split (won't handle commas inside quotes, keeping it simple as requested)
-                const parts = line.split(',');
-                if (parts.length >= 3) {
-                    const sku = parts[0].trim();
-                    const name = parts[1].trim();
-                    const price = parseFloat(parts[2].trim()) || 0;
-                    const barcode = parts[3] ? parts[3].trim() : '';
-                    const image = parts[4] ? parts[4].trim() : '';
-                    
-                    if (sku && name) {
-                        // Check if SKU exists
-                        const idx = db.products.findIndex(p => p.sku === sku);
-                        const newProd = { sku, name, price, barcode, image };
-                        
-                        if (idx >= 0) {
-                            db.products[idx] = newProd; // Update
-                        } else {
-                            db.products.push(newProd); // Add
-                        }
-                        addedCount++;
-                    }
-                }
-            }
-            
-            save();
-            renderProducts();
-            showToast(`Import สำเร็จ ${addedCount} รายการ`, 2000);
-            input.value = ''; // Reset file input
+            const data = e.target.result;
+            let workbook = XLSX.read(data, { type: 'binary' });
+            let firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            // Read rows as array of arrays (header included)
+            let jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            processImportData(jsonData);
+            input.value = ''; // Reset
         };
-        reader.readAsText(file);
+        reader.readAsBinaryString(file);
     }
 
-    function openProductModal(editSku = null) {
-        document.getElementById('product-modal').classList.remove('hidden');
-        
-        if (editSku) {
-            // Edit Mode
-            const p = db.products.find(x => x.sku === editSku);
-            if (!p) return;
+    function processImportData(rows) {
+        if (!rows || rows.length < 2) {
+            alert('ไม่พบข้อมูลในไฟล์');
+            return;
+        }
+
+        // Expected Columns Index based on Prompt structure:
+        // 0:Timestamp, 1:Order ID, 2:Customer Name, 3:Phone, 4:Address, 5:Channel, 6:Payment
+        // 7:Product, 8:SKU, 9:Qty, 10:Subtotal, 11:Discount, 12:Total, 13:Status
+
+        const orderMap = {};
+        const importBatchId = new Date().getTime();
+        let skippedCount = 0;
+        let newCount = 0;
+
+        // Skip header (row 0)
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row || row.length === 0 || !row[1]) continue; // Need Order ID
+
+            const orderId = String(row[1]).trim();
             
-            document.getElementById('product-modal-title').innerText = "แก้ไขสินค้า";
-            document.getElementById('p-mode').value = "edit";
-            document.getElementById('p-sku').value = p.sku;
-            document.getElementById('p-sku').disabled = true; // SKU cannot change
-            document.getElementById('p-name').value = p.name;
-            document.getElementById('p-price').value = p.price;
-            document.getElementById('p-barcode').value = p.barcode || '';
-            document.getElementById('p-image').value = p.image || '';
-            previewImage(p.image || '');
-        } else {
-            // Add Mode
-            document.getElementById('product-modal-title').innerText = "เพิ่มสินค้าใหม่";
-            document.getElementById('p-mode').value = "add";
-            document.getElementById('p-sku').value = "";
-            document.getElementById('p-sku').disabled = false;
-            document.getElementById('p-name').value = "";
-            document.getElementById('p-price').value = "";
-            document.getElementById('p-barcode').value = "";
-            document.getElementById('p-image').value = "";
-            previewImage('');
-        }
-    }
-    
-    function previewImage(url) {
-        const img = document.getElementById('p-preview');
-        const noImg = document.getElementById('p-no-img');
-        if (url) {
-            img.src = url;
-            img.style.display = 'block';
-            noImg.style.display = 'none';
-            img.onerror = () => { img.style.display='none'; noImg.style.display='inline'; noImg.innerText='รูปเสีย'; };
-        } else {
-            img.style.display = 'none';
-            noImg.style.display = 'inline';
-            noImg.innerText = 'ไม่มีรูปภาพ';
-        }
-    }
+            // Check Duplicate in DB
+            if (db.orders.some(o => o.id === orderId)) {
+                if (!orderMap[orderId]) skippedCount++; // Count unique skipped orders
+                continue; 
+            }
 
-    function handleSaveProduct() {
-        const mode = document.getElementById('p-mode').value;
-        const sku = document.getElementById('p-sku').value.trim();
-        const name = document.getElementById('p-name').value.trim();
-        const price = parseFloat(document.getElementById('p-price').value);
-        const barcode = document.getElementById('p-barcode').value.trim();
-        const image = document.getElementById('p-image').value.trim();
+            if (!orderMap[orderId]) {
+                // Create new Order Object
+                orderMap[orderId] = {
+                    id: orderId,
+                    date: row[0] || new Date().toISOString(), // Timestamp
+                    name: row[2] || 'Unknown',
+                    phone: String(row[3] || ''),
+                    address: row[4] || '',
+                    channel: row[5] || 'Import',
+                    payment: row[6] || 'Import',
+                    items: [],
+                    subtotal: parseFloat(row[10]) || 0,
+                    discount: parseFloat(row[11]) || 0,
+                    total: parseFloat(row[12]) || 0,
+                    status: 'Shipped', // Force Shipped
+                    order_source: 'imported', // Flag
+                    import_batch_id: importBatchId
+                };
+                newCount++;
+            }
 
-        if(!sku || !name || isNaN(price)) { alert('กรุณากรอกข้อมูลให้ครบถ้วน'); return; }
-
-        if (mode === 'add') {
-            if (db.products.some(p => p.sku === sku)) { alert('SKU นี้มีอยู่แล้ว'); return; }
-            db.products.push({ sku, name, price, barcode, image });
-        } else {
-            const idx = db.products.findIndex(p => p.sku === sku);
-            if (idx !== -1) {
-                db.products[idx] = { sku, name, price, barcode, image };
+            // Add Item
+            const productName = row[7];
+            if (productName) {
+                orderMap[orderId].items.push({
+                    name: productName,
+                    sku: row[8] || '',
+                    qty: parseFloat(row[9]) || 1,
+                    price: 0 // Price per unit not explicitly in CSV, derived logic if needed
+                });
             }
         }
-        
-        save();
-        closeModal(null, true);
-        renderProducts();
-        showToast('บันทึกสินค้าเรียบร้อย');
-    }
 
-    function delProd(sku) {
-        if(!confirm('ยืนยันลบสินค้า ' + sku + '?')) return;
-        db.products = db.products.filter(p => p.sku !== sku);
-        save();
-        renderProducts();
+        // Convert Map to Array and Finalize
+        const newOrders = Object.values(orderMap).map(o => {
+            // Generate summary string
+            o.items_summary = o.items.map((it, idx) => `${idx+1}. ${it.name} [${it.sku}] x${it.qty}`).join('\n');
+            return o;
+        });
+
+        if (newOrders.length > 0) {
+            db.orders = [...newOrders, ...db.orders]; // Add to top
+            save();
+            renderOrders();
+            renderDashboard();
+            showToast(`นำเข้าสำเร็จ ${newOrders.length} รายการ (ข้าม ${skippedCount} รายการซ้ำ)`);
+        } else {
+            alert(`ไม่พบรายการใหม่ หรือ Order ID ซ้ำทั้งหมด (${skippedCount} รายการ)`);
+        }
     }
 
     // --- Modals & Printing ---
@@ -1698,32 +2329,337 @@
         }
     });
 
-    // --- Router Function ---
-    function router(view, el) {
-      document.querySelectorAll('main > div').forEach(v => v.classList.add('hidden'));
-      document.getElementById('view-' + view).classList.remove('hidden');
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      if(el) el.classList.add('active');
-      
-      if(view === 'dashboard') renderDashboard();
-      if(view === 'orders') renderOrders();
-      if(view === 'packing') renderPacking();
-      if(view === 'products') renderProducts();
-      if(view === 'customers') renderCustomers();
-      if(view === 'history') fetchHistory();
-      
-      if(view === 'create' && !editingOrderId) {
-        document.getElementById('create-title').innerText = "สร้างออเดอร์ใหม่";
-        document.getElementById('btn-save').innerText = "บันทึกออเดอร์";
-        document.getElementById('btn-save').className = "btn btn-primary btn-lg";
-        document.getElementById('in-name').value = '';
-        document.getElementById('in-phone').value = '';
-        document.getElementById('in-address').value = '';
-        document.getElementById('form-discount-input').value = 0;
-        document.getElementById('form-items-container').innerHTML = '';
-        addFormRow();
-        calcTotal();
-      }
+    // --- Helper Functions for Image Source ---
+    function setImgMode(mode) {
+        document.getElementById('mode-url').classList.add('hidden');
+        document.getElementById('mode-upload').classList.add('hidden');
+        document.getElementById('mode-drive').classList.add('hidden');
+        
+        document.getElementById('mode-' + mode).classList.remove('hidden');
+    }
+
+    function readUpload(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            if (file.size > 500000) { // 500KB limit warning
+                alert("ไฟล์มีขนาดใหญ่เกิน 500KB อาจทำให้ระบบช้าลง");
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Update the main hidden/visible input used by save logic
+                document.getElementById('p-image').value = e.target.result; 
+                previewImage(e.target.result);
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function readDrive(link) {
+        let fileId = "";
+        const regExp = /\/d\/([a-zA-Z0-9_-]+)/;
+        const match = link.match(regExp);
+        
+        if (match && match[1]) {
+            fileId = match[1];
+            const viewLink = `https://drive.google.com/uc?export=view&id=${fileId}`;
+            document.getElementById('p-image').value = viewLink;
+            previewImage(viewLink);
+        } else {
+            document.getElementById('p-image').value = link;
+            previewImage(link);
+        }
+    }
+
+    // --- Barcode Modal Logic ---
+    function openBarcodeModal(sku) {
+        const p = db.products.find(x => x.sku === sku);
+        if (!p) return;
+
+        // Auto-Generate Barcode if missing (Mock Logic)
+        const displayBarcode = p.barcode || '885' + Math.floor(1000000000 + Math.random() * 9000000000); 
+
+        // Store current product data for printing
+        window.currentBarcodeProduct = { ...p, displayBarcode };
+
+        document.getElementById('bc-prev-name').innerText = p.name;
+        document.getElementById('bc-prev-sku').innerText = `SKU: ${p.sku}`;
+        document.getElementById('bc-prev-code').innerText = displayBarcode;
+        
+        // Handle Image
+        const imgEl = document.getElementById('bc-prev-img');
+        const noImgEl = document.getElementById('bc-no-img');
+        
+        if (p.image) {
+            imgEl.src = p.image;
+            imgEl.style.display = 'block';
+            noImgEl.classList.add('hidden');
+            imgEl.onerror = () => {
+                imgEl.style.display = 'none';
+                noImgEl.classList.remove('hidden');
+            };
+        } else {
+            imgEl.style.display = 'none';
+            noImgEl.classList.remove('hidden');
+        }
+
+        document.getElementById('barcode-modal').classList.remove('hidden');
+    }
+
+    function printBarcodeAction() {
+        showToast("กำลังเตรียมเอกสารสำหรับพิมพ์…");
+        
+        const p = window.currentBarcodeProduct;
+        if (!p) return;
+
+        // 1. Get Settings
+        const layoutType = document.querySelector('input[name="bc_layout"]:checked').value; // 'label' or 'a4'
+        const showSku = document.getElementById('bc-opt-sku').checked;
+        const showName = document.getElementById('bc-opt-name').checked;
+        const showPrice = document.getElementById('bc-opt-price').checked;
+
+        // 2. Build Single Sticker HTML
+        const imgHtml = p.image 
+            ? `<div class="sticker-img"><img src="${p.image}" onerror="this.style.display='none'"></div>` 
+            : `<div class="sticker-img" style="background:#f5f5f5; color:#999; font-size:9px;">No IMG</div>`;
+            
+        const contentHtml = `
+            <div class="sticker-content">
+                <div>
+                    ${showName ? `<div class="sticker-name">${p.name}</div>` : ''}
+                    ${showSku ? `<div class="sticker-sku">SKU: ${p.sku}</div>` : ''}
+                    ${showPrice ? `<div class="sticker-price">฿${Number(p.price).toLocaleString()}</div>` : ''}
+                </div>
+                <div class="sticker-barcode-wrapper">
+                    <div class="sticker-barcode-bars"></div>
+                    <div class="sticker-barcode-num">${p.displayBarcode}</div>
+                </div>
+            </div>
+        `;
+
+        const stickerHtml = `
+            <div class="sticker-container">
+                ${imgHtml}
+                ${contentHtml}
+            </div>
+        `;
+
+        // 3. Layout Construction
+        let finalHtml = '';
+        if (layoutType === 'a4') {
+            // A4 Grid: Loop 24 times
+            let gridItems = '';
+            for(let i=0; i<24; i++) {
+                gridItems += `<div class="print-label-item">${stickerHtml}</div>`;
+            }
+            finalHtml = `<div class="barcode-print-page barcode-grid-a4">${gridItems}</div>`;
+        } else {
+            // Single Label
+            finalHtml = `<div class="barcode-print-page barcode-single-label">${stickerHtml}</div>`;
+        }
+
+        const printArea = document.getElementById('printable-area');
+        printArea.innerHTML = finalHtml;
+        
+        setTimeout(() => {
+            window.print();
+            // Optional: Clear after print
+            // printArea.innerHTML = '';
+        }, 500);
+    }
+    
+    function previewImage(url) {
+        const img = document.getElementById('p-preview');
+        const noImg = document.getElementById('p-no-img');
+        if (url) {
+            img.src = url;
+            img.style.display = 'block';
+            noImg.style.display = 'none';
+            img.onerror = () => { img.style.display='none'; noImg.style.display='inline'; noImg.innerText='รูปเสีย'; };
+        } else {
+            img.style.display = 'none';
+            noImg.style.display = 'inline';
+            noImg.innerText = 'ไม่มีรูปภาพ';
+        }
+    }
+
+    function handleSaveProduct() {
+        const mode = document.getElementById('p-mode').value;
+        const sku = document.getElementById('p-sku').value.trim();
+        const name = document.getElementById('p-name').value.trim();
+        const price = parseFloat(document.getElementById('p-price').value);
+        const barcode = document.getElementById('p-barcode').value.trim();
+        const image = document.getElementById('p-image').value.trim();
+
+        if(!sku || !name || isNaN(price)) { alert('กรุณากรอกข้อมูลให้ครบถ้วน'); return; }
+
+        if (mode === 'add') {
+            if (db.products.some(p => p.sku === sku)) { alert('SKU นี้มีอยู่แล้ว'); return; }
+            db.products.push({ sku, name, price, barcode, image });
+        } else {
+            const idx = db.products.findIndex(p => p.sku === sku);
+            if (idx !== -1) {
+                db.products[idx] = { sku, name, price, barcode, image };
+            }
+        }
+        
+        save();
+        closeModal(null, true);
+        renderProducts();
+        showToast('บันทึกสินค้าเรียบร้อย');
+    }
+
+    function delProd(sku) {
+        if(!confirm('ยืนยันลบสินค้า ' + sku + '?')) return;
+        db.products = db.products.filter(p => p.sku !== sku);
+        save();
+        renderProducts();
+    }
+
+    // --- Order Import Logic ---
+    function triggerImportOrder() {
+        document.getElementById('import-order-file').click();
+    }
+
+    function handleImportOrder(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = e.target.result;
+            let workbook = XLSX.read(data, { type: 'binary' });
+            let firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            // Read rows as array of arrays (header included)
+            let jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            processImportData(jsonData);
+            input.value = ''; // Reset
+        };
+        reader.readAsBinaryString(file);
+    }
+
+    function processImportData(rows) {
+        if (!rows || rows.length < 2) {
+            alert('ไม่พบข้อมูลในไฟล์');
+            return;
+        }
+
+        // Expected Columns Index based on Prompt structure:
+        // 0:Timestamp, 1:Order ID, 2:Customer Name, 3:Phone, 4:Address, 5:Channel, 6:Payment
+        // 7:Product, 8:SKU, 9:Qty, 10:Subtotal, 11:Discount, 12:Total, 13:Status
+
+        const orderMap = {};
+        const importBatchId = new Date().getTime();
+        let skippedCount = 0;
+        let newCount = 0;
+
+        // Skip header (row 0)
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row || row.length === 0 || !row[1]) continue; // Need Order ID
+
+            const orderId = String(row[1]).trim();
+            
+            // Check Duplicate in DB
+            if (db.orders.some(o => o.id === orderId)) {
+                if (!orderMap[orderId]) skippedCount++; // Count unique skipped orders
+                continue; 
+            }
+
+            if (!orderMap[orderId]) {
+                // Create new Order Object
+                orderMap[orderId] = {
+                    id: orderId,
+                    date: row[0] || new Date().toISOString(), // Timestamp
+                    name: row[2] || 'Unknown',
+                    phone: String(row[3] || ''),
+                    address: row[4] || '',
+                    channel: row[5] || 'Import',
+                    payment: row[6] || 'Import',
+                    items: [],
+                    subtotal: parseFloat(row[10]) || 0,
+                    discount: parseFloat(row[11]) || 0,
+                    total: parseFloat(row[12]) || 0,
+                    status: 'Shipped', // Force Shipped
+                    order_source: 'imported', // Flag
+                    import_batch_id: importBatchId
+                };
+                newCount++;
+            }
+
+            // Add Item
+            const productName = row[7];
+            if (productName) {
+                orderMap[orderId].items.push({
+                    name: productName,
+                    sku: row[8] || '',
+                    qty: parseFloat(row[9]) || 1,
+                    price: 0 // Price per unit not explicitly in CSV, derived logic if needed
+                });
+            }
+        }
+
+        // Convert Map to Array and Finalize
+        const newOrders = Object.values(orderMap).map(o => {
+            // Generate summary string
+            o.items_summary = o.items.map((it, idx) => `${idx+1}. ${it.name} [${it.sku}] x${it.qty}`).join('\n');
+            return o;
+        });
+
+        if (newOrders.length > 0) {
+            db.orders = [...newOrders, ...db.orders]; // Add to top
+            save();
+            renderOrders();
+            renderDashboard();
+            showToast(`นำเข้าสำเร็จ ${newOrders.length} รายการ (ข้าม ${skippedCount} รายการซ้ำ)`);
+        } else {
+            alert(`ไม่พบรายการใหม่ หรือ Order ID ซ้ำทั้งหมด (${skippedCount} รายการ)`);
+        }
+    }
+
+    // --- Form Helpers ---
+    function addFormRow() {
+      const div = document.createElement('div');
+      div.className = 'item-list-row';
+      div.innerHTML = `<input type="text" class="form-control item-name" list="prod-list" placeholder="สินค้า" onchange="syncRow(this)"><input type="text" class="form-control item-sku" placeholder="SKU"><input type="number" class="form-control item-qty" value="1" onchange="calcTotal()"><input type="number" class="form-control item-price" placeholder="ราคา" onchange="calcTotal()"><button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); calcTotal()">✕</button><datalist id="prod-list">${db.products.map(p => `<option value="${p.name}">${p.sku}</option>`).join('')}</datalist>`;
+      document.getElementById('form-items-container').appendChild(div);
+    }
+
+    function syncRow(el) {
+      const p = db.products.find(x => x.name === el.value);
+      if(p) { const row = el.parentElement; row.querySelector('.item-sku').value = p.sku; row.querySelector('.item-price').value = p.price; calcTotal(); }
+    }
+
+    function calcTotal() {
+      let subtotal = 0;
+      document.querySelectorAll('.item-list-row').forEach(row => { subtotal += (parseFloat(row.querySelector('.item-qty').value) || 0) * (parseFloat(row.querySelector('.item-price').value) || 0); });
+      const discInput = parseFloat(document.getElementById('form-discount-input').value) || 0;
+      const total = subtotal - (document.getElementById('form-discount-type').value === 'Percent' ? subtotal * (discInput / 100) : discInput);
+      document.getElementById('form-subtotal').innerText = subtotal.toLocaleString();
+      document.getElementById('form-total').innerText = total.toLocaleString();
+    }
+
+    function autoFillCust() { 
+      const ph = document.getElementById('in-phone').value; 
+      const found = db.orders.find(o => o.phone === ph); 
+      if(found) { 
+        document.getElementById('in-name').value = found.name; 
+        document.getElementById('in-address').value = found.address; 
+        showToast("ดึงข้อมูลลูกค้าเดิมแล้ว"); 
+      } 
+    }
+
+    // --- Sync ---
+    async function fetchHistory(isAuto = false) {
+      if(!isAuto) showToast("กำลังดึงข้อมูลล่าสุดจาก Sheet...", 0);
+      try {
+        const res = await fetch(SCRIPT_URL + "?action=getHistory");
+        const data = await res.json();
+        db.history = Array.isArray(data) ? data.filter(x => x.id && x.id !== 'id') : [];
+        const syncEl = document.getElementById('last-sync-time');
+        if(syncEl) syncEl.innerText = `อัปเดตเมื่อ: ${new Date().toLocaleTimeString()}`;
+        renderHistory();
+        if(!isAuto) showToast("อัปเดตข้อมูลแล้ว", 2000);
+      } catch(e) { if(!isAuto) showToast("ไม่สามารถดึงข้อมูลได้", 3000); }
     }
 
     // --- Boot ---
