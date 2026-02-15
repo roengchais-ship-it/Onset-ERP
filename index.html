@@ -636,6 +636,108 @@
       .sticker-barcode-bars { height: 18px; width: 100%; min-width: 35mm; background-image: repeating-linear-gradient(to right, black 0px, black 1px, transparent 1px, transparent 3px, black 3px, black 4px, transparent 4px, transparent 5px); margin: 0 auto; }
     }
     #printable-area { display: none; background: white; color: black; }
+
+    /* ============================================================
+      MOBILE RESPONSIVE CSS (วางส่วนนี้เพิ่มเข้าไปล่างสุดของ Style)
+      ============================================================ */
+    @media (max-width: 900px) {
+      /* 1. จัดโครงสร้างหลักใหม่ (Main Layout) */
+      body {
+        flex-direction: column; /* เปลี่ยนแนวเป็น บน-ล่าง */
+        height: 100vh;
+        overflow: hidden; /* ห้าม Scroll ที่ Body หลัก */
+      }
+
+      /* 2. เปลี่ยน Sidebar ด้านข้าง เป็น เมนูบาร์ด้านล่าง (Bottom Nav) */
+      .sidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 65px; /* ความสูงเมนู */
+        flex-direction: row; /* เรียงปุ่มแนวนอน */
+        justify-content: space-around; /* กระจายปุ่มให้เท่ากัน */
+        padding: 0 5px;
+        z-index: 2000;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+        border-top: 1px solid rgba(255,255,255,0.1);
+        overflow-x: auto; /* เผื่อหน้าจอเล็กมาก */
+      }
+
+      .brand { display: none; } /* ซ่อนโลโก้ */
+      
+      .nav-item {
+        flex-direction: column; /* ไอคอนอยู่บน ตัวหนังสืออยู่ล่าง */
+        gap: 2px;
+        font-size: 10px;
+        padding: 6px 2px;
+        justify-content: center;
+        width: 100%;
+        border-radius: 8px;
+        margin: 4px 2px;
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      .nav-item .material-icons-round { font-size: 24px; }
+      
+      /* 3. ปรับพื้นที่เนื้อหา (Content) ให้ไม่โดนเมนูบัง */
+      .main-content {
+        padding: 16px 16px 90px 16px; /* เว้นด้านล่าง 90px ให้เมนู */
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch; /* ให้เลื่อนลื่นๆ บน iOS */
+      }
+
+      /* 4. หน้า Dashboard (เรียง 2 แถว) */
+      .dash-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .dash-charts-grid, .dash-bottom-grid { grid-template-columns: 1fr; gap: 16px; }
+      .dash-controls { justify-content: space-between; gap: 10px; }
+      
+      /* 5. หน้าสร้างออเดอร์ (Forms Stack) */
+      #view-create form > div { grid-template-columns: 1fr !important; gap: 16px; }
+      
+      /* ปรับรายการสินค้าตอนกรอก (Item List Row) ให้ดูง่ายขึ้น */
+      .item-list-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 40px; /* ชื่อสินค้า | ราคา+จำนวน | ปุ่มลบ */
+        gap: 8px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+      }
+      .item-list-row .form-control { margin-bottom: 0; }
+      .item-list-row .item-name { grid-column: 1 / -1; width: 100%; } /* ชื่อสินค้าเต็มแถว */
+      .item-list-row .item-sku { display: none; } /* ซ่อน SKU ชั่วคราวเพื่อให้ไม่รก */
+      .item-list-row button { height: 100%; display: flex; align-items: center; justify-content: center; }
+
+      /* ซ่อน Header ตารางรายการสินค้า */
+      #view-create .card h3 + div { display: none; }
+
+      /* 6. หน้า Packing (Tab View) */
+      .packing-layout { display: flex; flex-direction: column; height: auto; }
+      .pack-list-col { height: 250px; margin-bottom: 16px; flex-shrink: 0; }
+      .pack-workspace { height: 500px; min-height: 50vh; }
+      
+      /* 7. ตารางข้อมูล (Table Scroll) */
+      .table-erp { display: block; overflow-x: auto; white-space: nowrap; }
+      .table-erp th, .table-erp td { padding: 12px 10px; font-size: 13px; }
+      
+      /* 8. Modal (Popup) */
+      .modal-content {
+        width: 95% !important;
+        max-height: 90vh;
+        border-radius: 12px;
+      }
+      .modal-body { padding: 20px; }
+
+      /* 9. ปรับขนาดปุ่มให้กดง่าย (Touch Friendly) */
+      .btn, .form-control { min-height: 44px; font-size: 14px; }
+      .action-btn { padding: 10px; margin: 0 2px; background: #f1f5f9; border-radius: 8px; }
+    }
   </style>
 </head>
 <body>
@@ -1377,8 +1479,9 @@
     }
 
     function save() {
-      localStorage.setItem('oms_orders', JSON.stringify(db.orders));
-      localStorage.setItem('oms_products', JSON.stringify(db.products));
+      // localStorage.setItem('oms_orders', JSON.stringify(db.orders));
+      // localStorage.setItem('oms_products', JSON.stringify(db.products));
+      // Legacy Save Disabled - Now using Firestore
     }
 
     function showToast(msg, dur=3000) {
@@ -1406,6 +1509,49 @@
     // 3. CORE FUNCTIONS & LOGIC
     // ============================================
     
+    // --- FIREBASE SYNC LOGIC (NEW) ---
+    function initFirebaseListeners() {
+        showToast("กำลังเชื่อมต่อข้อมูล Real-time...", 0);
+        
+        // Listen to Orders
+        dbFirestore.collection('orders').orderBy('date', 'desc').onSnapshot(snapshot => {
+            const orders = [];
+            snapshot.forEach(doc => {
+                orders.push(doc.data());
+            });
+            db.orders = orders;
+            
+            // Initial render or update
+            if(!document.getElementById('view-dashboard').classList.contains('hidden')) renderDashboard();
+            if(!document.getElementById('view-orders').classList.contains('hidden')) renderOrders();
+            if(!document.getElementById('view-packing').classList.contains('hidden')) renderPacking();
+            if(!document.getElementById('view-customers').classList.contains('hidden')) renderCustomers();
+            
+            // Hide toast if it's the loading one
+            const toast = document.getElementById('sync-toast');
+            if(toast.classList.contains('show') && document.getElementById('sync-msg').innerText.includes('กำลังเชื่อมต่อ')) {
+                toast.classList.remove('show');
+            }
+        }, error => {
+            console.error("Orders sync error:", error);
+            showToast("เกิดข้อผิดพลาดในการเชื่อมต่อข้อมูล", 3000);
+        });
+
+        // Listen to Products
+        dbFirestore.collection('products').onSnapshot(snapshot => {
+            const products = [];
+            snapshot.forEach(doc => {
+                products.push(doc.data());
+            });
+            db.products = products;
+            
+            if(!document.getElementById('view-products').classList.contains('hidden')) renderProducts();
+            updateProductDatalist();
+        }, error => {
+            console.error("Products sync error:", error);
+        });
+    }
+
     // --- Dashboard & Renderers ---
     function setDashFilter(period) {
         dashboardState.period = period;
@@ -1906,33 +2052,28 @@
             return;
         }
 
-        // Expected Columns Index based on Prompt structure:
-        // 0:Timestamp, 1:Order ID, 2:Customer Name, 3:Phone, 4:Address, 5:Channel, 6:Payment
-        // 7:Product, 8:SKU, 9:Qty, 10:Subtotal, 11:Discount, 12:Total, 13:Status
-
         const orderMap = {};
         const importBatchId = new Date().getTime();
         let skippedCount = 0;
         let newCount = 0;
 
-        // Skip header (row 0)
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
-            if (!row || row.length === 0 || !row[1]) continue; // Need Order ID
+            if (!row || row.length === 0 || !row[1]) continue; 
 
             const orderId = String(row[1]).trim();
             
-            // Check Duplicate in DB
+            // Note: In Firestore real-time, checking `db.orders.some` is valid if db.orders is up to date via listener
+            // Ideally we check Firestore existence, but for bulk import, optimistically using local cache is faster
             if (db.orders.some(o => o.id === orderId)) {
-                if (!orderMap[orderId]) skippedCount++; // Count unique skipped orders
+                if (!orderMap[orderId]) skippedCount++; 
                 continue; 
             }
 
             if (!orderMap[orderId]) {
-                // Create new Order Object
                 orderMap[orderId] = {
                     id: orderId,
-                    date: row[0] || new Date().toISOString(), // Timestamp
+                    date: row[0] || new Date().toISOString(), 
                     name: row[2] || 'Unknown',
                     phone: String(row[3] || ''),
                     address: row[4] || '',
@@ -1942,38 +2083,43 @@
                     subtotal: parseFloat(row[10]) || 0,
                     discount: parseFloat(row[11]) || 0,
                     total: parseFloat(row[12]) || 0,
-                    status: 'Shipped', // Force Shipped
-                    order_source: 'imported', // Flag
+                    status: 'Shipped', 
+                    order_source: 'imported', 
                     import_batch_id: importBatchId
                 };
                 newCount++;
             }
 
-            // Add Item
             const productName = row[7];
             if (productName) {
                 orderMap[orderId].items.push({
                     name: productName,
                     sku: row[8] || '',
                     qty: parseFloat(row[9]) || 1,
-                    price: 0 // Price per unit not explicitly in CSV, derived logic if needed
+                    price: 0 
                 });
             }
         }
 
-        // Convert Map to Array and Finalize
         const newOrders = Object.values(orderMap).map(o => {
-            // Generate summary string
             o.items_summary = o.items.map((it, idx) => `${idx+1}. ${it.name} [${it.sku}] x${it.qty}`).join('\n');
             return o;
         });
 
         if (newOrders.length > 0) {
-            db.orders = [...newOrders, ...db.orders]; // Add to top
-            save();
-            renderOrders();
-            renderDashboard();
-            showToast(`นำเข้าสำเร็จ ${newOrders.length} รายการ (ข้าม ${skippedCount} รายการซ้ำ)`);
+            // Write to Firestore Batch
+            const batch = dbFirestore.batch();
+            newOrders.forEach(order => {
+                const ref = dbFirestore.collection('orders').doc(order.id);
+                batch.set(ref, order);
+            });
+            
+            batch.commit().then(() => {
+                showToast(`นำเข้าสำเร็จ ${newOrders.length} รายการ (ข้าม ${skippedCount} รายการซ้ำ)`);
+            }).catch(err => {
+                console.error("Import error:", err);
+                alert("เกิดข้อผิดพลาดในการนำเข้า Firebase");
+            });
         } else {
             alert(`ไม่พบรายการใหม่ หรือ Order ID ซ้ำทั้งหมด (${skippedCount} รายการ)`);
         }
@@ -2045,31 +2191,32 @@
 
         showToast("กำลังอัปเดตสถานะ...", 0);
         
+        // Write to Firestore Batch
+        const batch = dbFirestore.batch();
         let updatedCount = 0;
-        const updates = [];
         
-        db.orders.forEach(o => {
-            if(selectedIds.includes(o.id)) {
-                o.status = status;
-                updatedCount++;
-                updates.push(o);
-            }
+        selectedIds.forEach(id => {
+            const ref = dbFirestore.collection('orders').doc(id);
+            batch.update(ref, { status: status });
+            updatedCount++;
         });
         
-        save();
-        renderOrders();
-        renderDashboard();
-        updateBulk(); 
+        batch.commit().then(() => {
+            updateBulk();
+            showToast(`อัปเดต ${updatedCount} รายการเรียบร้อย`, 2000);
+        }).catch(err => {
+            console.error(err);
+            showToast("เกิดข้อผิดพลาดในการอัปเดต", 3000);
+        });
         
-        showToast(`อัปเดต ${updatedCount} รายการเรียบร้อย`, 2000);
-        
-        for (const o of updates) {
+        // Background Sync (Hybrid)
+        for (const id of selectedIds) {
            try {
                await fetch(SCRIPT_URL, { 
                    method: 'POST', 
                    mode: 'no-cors', 
                    headers: { 'Content-Type': 'application/json' }, 
-                   body: JSON.stringify({ action: 'updateStatus', id: o.id, status: status }) 
+                   body: JSON.stringify({ action: 'updateStatus', id: id, status: status }) 
                });
            } catch(e) { console.error("Sync error:", e); }
         }
@@ -2085,17 +2232,22 @@
 
         showToast("กำลังลบรายการ...", 0);
 
-        // UI Optimistic Update (Simulate Deletion)
-        db.orders = db.orders.filter(o => !selectedIds.includes(o.id));
-        
-        save();
-        renderOrders();
-        renderDashboard();
-        updateBulk(); // Hide the bar
+        // Firestore Batch Delete
+        const batch = dbFirestore.batch();
+        selectedIds.forEach(id => {
+            const ref = dbFirestore.collection('orders').doc(id);
+            batch.delete(ref);
+        });
 
-        showToast(`ลบ ${selectedIds.length} รายการเรียบร้อย`, 2000);
+        batch.commit().then(() => {
+            updateBulk();
+            showToast(`ลบ ${selectedIds.length} รายการเรียบร้อย`, 2000);
+        }).catch(err => {
+            console.error(err);
+            showToast("เกิดข้อผิดพลาดในการลบ", 3000);
+        });
         
-        // Background Sync (Existing Logic Pattern)
+        // Background Sync
         for (const id of selectedIds) {
            try {
                await fetch(SCRIPT_URL, { 
@@ -2178,11 +2330,11 @@
 
     function deleteOrder(id) {
         if(!confirm('ยืนยันการลบออเดอร์ ' + id + '?')) return;
-        db.orders = db.orders.filter(o => o.id !== id);
-        save();
-        renderOrders();
-        renderDashboard();
-        showToast("ลบออเดอร์เรียบร้อย");
+        
+        // Firebase Delete
+        dbFirestore.collection('orders').doc(id).delete()
+            .then(() => showToast("ลบออเดอร์เรียบร้อย"))
+            .catch(err => console.error("Delete Error", err));
         
         // Sync delete
         try {
@@ -2258,17 +2410,12 @@
             order_source: 'manual'
         };
 
-        if(editingOrderId) {
-            const idx = db.orders.findIndex(x => x.id === editingOrderId);
-            if(idx !== -1) db.orders[idx] = orderData;
-        } else {
-            db.orders.unshift(orderData);
-        }
+        // Firebase Write
+        dbFirestore.collection('orders').doc(orderData.id).set(orderData)
+            .then(() => showToast(editingOrderId ? "แก้ไขเรียบร้อย" : "บันทึกออเดอร์สำเร็จ"))
+            .catch(err => alert("Error saving to cloud: " + err));
 
-        save();
-        showToast(editingOrderId ? "แก้ไขเรียบร้อย" : "บันทึกออเดอร์สำเร็จ");
-        
-        // Sync
+        // Hybrid Sync to Sheet
         try {
             await fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -2422,15 +2569,13 @@
 
       if(!confirm(`ยืนยันการแพ็คออเดอร์ ${order.id} เรียบร้อย?`)) return;
 
-      order.status = 'Shipped';
-      save();
-      
-      showToast("แพ็คสินค้าเรียบร้อย");
+      // Firebase Update
+      dbFirestore.collection('orders').doc(order.id).update({ status: 'Shipped' })
+        .then(() => showToast("แพ็คสินค้าเรียบร้อย"))
+        .catch(e => console.error(e));
       
       // Return to idle state
       packingOrderId = null;
-      renderPacking();
-      renderDashboard(); // Update stats
       document.getElementById('pack-active-state').classList.add('hidden');
       document.getElementById('pack-idle-state').classList.remove('hidden');
 
@@ -2462,13 +2607,12 @@
             const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
             
             let addedCount = 0;
+            const batch = dbFirestore.batch();
             
             // Start from index 1 to skip header
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row || row.length === 0) continue;
-                
-                // Adjust indices based on expected format: SKU, Name, Price, Barcode, Image
                 
                 const sku = row[0] ? String(row[0]).trim() : '';
                 const name = row[1] ? String(row[1]).trim() : '';
@@ -2477,22 +2621,17 @@
                 const image = row[4] ? String(row[4]).trim() : '';
                 
                 if (sku && name) {
-                    const idx = db.products.findIndex(p => p.sku === sku);
                     const newProd = { sku, name, price, barcode, image };
-                    
-                    if (idx >= 0) {
-                        db.products[idx] = newProd; 
-                    } else {
-                        db.products.push(newProd); 
-                    }
+                    const ref = dbFirestore.collection('products').doc(sku);
+                    batch.set(ref, newProd);
                     addedCount++;
                 }
             }
             
-            save();
-            renderProducts();
-            showToast(`Import สำเร็จ ${addedCount} รายการ`, 2000);
-            input.value = ''; 
+            batch.commit().then(() => {
+                showToast(`Import สำเร็จ ${addedCount} รายการ`, 2000);
+                input.value = ''; 
+            });
         };
         reader.readAsBinaryString(file);
     }
@@ -2538,25 +2677,20 @@
 
         if (mode === 'add') {
             if (db.products.some(p => p.sku === sku)) { alert('SKU นี้มีอยู่แล้ว'); return; }
-            db.products.push({ sku, name, price, barcode, image });
-        } else {
-            const idx = db.products.findIndex(p => p.sku === sku);
-            if (idx !== -1) {
-                db.products[idx] = { sku, name, price, barcode, image };
-            }
         }
         
-        save();
-        closeModal(null, true);
-        renderProducts();
-        showToast('บันทึกสินค้าเรียบร้อย');
+        // Cloud Save
+        dbFirestore.collection('products').doc(sku).set({ sku, name, price, barcode, image })
+            .then(() => {
+                closeModal(null, true);
+                showToast('บันทึกสินค้าเรียบร้อย');
+            });
     }
 
     function delProd(sku) {
         if(!confirm('ยืนยันลบสินค้า ' + sku + '?')) return;
-        db.products = db.products.filter(p => p.sku !== sku);
-        save();
-        renderProducts();
+        dbFirestore.collection('products').doc(sku).delete()
+            .then(() => showToast("ลบสินค้าเรียบร้อย"));
     }
 
     // --- Delete All Products Function ---
@@ -2566,21 +2700,17 @@
             return;
         }
 
-        // First Confirmation
-        if (!confirm("⚠️ คำเตือน: คุณต้องการลบสินค้าทั้งหมดในคลังใช่หรือไม่?\n\nการกระทำนี้ไม่สามารถกู้คืนได้!")) {
-            return;
-        }
+        if (!confirm("⚠️ คำเตือน: คุณต้องการลบสินค้าทั้งหมดในคลังใช่หรือไม่?\n\nการกระทำนี้ไม่สามารถกู้คืนได้!")) return;
+        if (!confirm("⛔ ยืนยันครั้งสุดท้าย: ลบสินค้าทั้งหมดจริงๆ ใช่ไหม?")) return;
 
-        // Second Confirmation (Safety)
-        if (!confirm("⛔ ยืนยันครั้งสุดท้าย: ลบสินค้าทั้งหมดจริงๆ ใช่ไหม?")) {
-            return;
-        }
-
-        // Action
-        db.products = [];
-        save();
-        renderProducts();
-        showToast("ล้างข้อมูลสินค้าเรียบร้อยแล้ว", 3000);
+        // Action: Loop delete (Firestore doesn't support collection delete from client SDK easily)
+        const batch = dbFirestore.batch();
+        db.products.forEach(p => {
+            const ref = dbFirestore.collection('products').doc(p.sku);
+            batch.delete(ref);
+        });
+        
+        batch.commit().then(() => showToast("ล้างข้อมูลสินค้าเรียบร้อยแล้ว", 3000));
     }
     
     // --- Helper Functions for Image Source ---
@@ -2891,10 +3021,11 @@
 
     // --- Boot ---
     function initApp() {
+        initFirebaseListeners(); // Start Real-time Listeners immediately
         router('dashboard'); 
         fetchHistory(); 
         setInterval(() => fetchHistory(true), 300000);
-        updateProductDatalist(); // Init datalist
+        updateProductDatalist(); 
     }
 
     window.onload = initApp;
