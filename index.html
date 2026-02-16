@@ -2,7 +2,6 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <!-- 1. ปรับ Viewport ให้ล็อคการซูมและการขยับที่ไม่จำเป็น -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Onset ERP v4.9.5 - Sales Import & Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -58,14 +57,13 @@
       color: var(--text-main); 
       margin: 0; 
       display: flex; 
-      /* 2. ล็อคความสูงและความกว้างของ Body */
       height: 100%; 
       width: 100%;
-      position: fixed; /* เทคนิคสำหรับ iOS */
+      position: fixed; 
       overflow: hidden; 
       font-size: 14px;
       -webkit-font-smoothing: antialiased;
-      overscroll-behavior: none; /* ห้ามเด้งเมื่อรูดสุดขอบ */
+      overscroll-behavior: none; 
     }
 
     /* --- SCROLLBAR --- */
@@ -111,7 +109,7 @@
       transition: var(--transition); 
       font-weight: 500;
       font-size: 14px;
-      white-space: nowrap; /* ห้ามตัดคำ */
+      white-space: nowrap; 
     }
     
     .nav-item:hover { 
@@ -129,13 +127,12 @@
     /* --- MAIN CONTENT --- */
     .main-content { 
       flex: 1; 
-      /* 3. ให้ Scroll ได้เฉพาะส่วนเนื้อหา */
       overflow-y: auto; 
       overflow-x: hidden;
       padding: 32px 40px; 
       position: relative; 
       height: 100%;
-      -webkit-overflow-scrolling: touch; /* สัมผัสลื่นๆ บนมือถือ */
+      -webkit-overflow-scrolling: touch; 
     }
     
     .page-title { 
@@ -154,7 +151,7 @@
       background: var(--surface); 
       border-radius: var(--radius-lg); 
       box-shadow: var(--shadow-sm); 
-      padding: 28px; 
+      padding: 24px; 
       border: 1px solid var(--border); 
       margin-bottom: 24px; 
       transition: var(--transition);
@@ -166,7 +163,7 @@
     
     .card h3 { 
       margin-top: 0; 
-      margin-bottom: 24px; 
+      margin-bottom: 20px; 
       font-size: 15px; 
       font-weight: 700; 
       color: var(--text-main);
@@ -193,7 +190,7 @@
     }
     
     .dash-kpi-grid { 
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px; 
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 24px; 
     }
 
     .dash-kpi-card { 
@@ -213,14 +210,13 @@
     .dash-kpi-title { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.8px; }
     .dash-kpi-value { font-size: 32px; font-weight: 800; color: var(--text-main); display: flex; align-items: baseline; gap: 6px; line-height: 1; }
     
-    .dash-charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
-    .dash-bottom-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 24px; }
+    /* New Balanced Layout Classes */
+    .dash-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+    .dash-full-row { margin-bottom: 24px; }
     
     .chart-container { position: relative; height: 280px; width: 100%; }
     
     /* --- TABLE STYLES & LOCKING --- */
-    
-    /* 4. สร้าง Container สำหรับตารางให้เลื่อนแนวนอนได้เฉพาะในกรอบ */
     .table-scroll-container {
         width: 100%;
         overflow-x: auto;
@@ -229,15 +225,13 @@
         background: white;
     }
 
-    .dash-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; /* บังคับความกว้างขั้นต่ำ */ }
+    .dash-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px; }
     .dash-table thead th { text-align: left; padding: 12px 16px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); border-bottom: 2px solid var(--border); }
     .dash-table thead th:last-child { text-align: right; }
     .dash-table tbody td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; color: var(--text-main); }
     .dash-table tbody td:last-child { text-align: right; font-weight: 600; }
     .dash-table tbody tr:hover { background: #f8fafc; }
     .dash-table tbody tr:last-child td { border-bottom: none; }
-
-    @media (max-width: 1000px) { .dash-charts-grid, .dash-bottom-grid { grid-template-columns: 1fr; } }
 
     /* --- FORM ELEMENTS --- */
     .form-control { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-md); font-family: inherit; font-size: 14px; color: var(--text-main); background: #fff; transition: var(--transition); margin-bottom: 12px; }
@@ -251,7 +245,7 @@
     .item-list-row .form-control { margin-bottom: 0; }
 
     /* --- TABLE (ERP PROFESSIONAL) --- */
-    .table-erp { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 800px; /* บังคับความกว้างขั้นต่ำ */ }
+    .table-erp { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 800px; }
     .table-erp th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.8px; padding: 14px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
     .table-erp td { padding: 16px 20px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text-main); font-size: 14px; background: #fff; transition: background 0.15s; }
     .table-erp tr:last-child td { border-bottom: none; }
@@ -429,6 +423,11 @@
 
       /* 4. หน้า Dashboard (เรียง 2 แถว) */
       .dash-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      
+      /* Balance Fix for Mobile: Span the last item if odd number */
+      .dash-kpi-card:last-child { grid-column: span 2; }
+      
+      .dash-grid-2 { grid-template-columns: 1fr; gap: 16px; }
       .dash-charts-grid, .dash-bottom-grid { grid-template-columns: 1fr; gap: 16px; }
       .dash-controls { justify-content: space-between; gap: 10px; }
       
@@ -491,7 +490,7 @@
   <!-- MAIN -->
   <main class="main-content">
     
-    <!-- DASHBOARD (IMPROVED) -->
+    <!-- DASHBOARD (BALANCED LAYOUT) -->
     <div id="view-dashboard">
       <div class="page-title">
         Dashboard ภาพรวม
@@ -536,28 +535,34 @@
         </div>
       </div>
 
-      <!-- Charts Area -->
-      <div class="dash-charts-grid">
-          <div class="card">
-              <h3><span class="material-icons-round" style="color: var(--primary);">show_chart</span> แนวโน้มยอดขาย (Sales Trend)</h3>
-              <div class="chart-container">
-                  <canvas id="chart-trend"></canvas>
-              </div>
+      <!-- Row 1: Trend Full Width -->
+      <div class="card dash-full-row">
+          <h3><span class="material-icons-round" style="color: var(--primary);">show_chart</span> แนวโน้มยอดขาย (Sales Trend)</h3>
+          <div class="chart-container">
+              <canvas id="chart-trend"></canvas>
           </div>
+      </div>
+
+      <!-- Row 2: Channel & Payment (50/50) -->
+      <div class="dash-grid-2">
           <div class="card">
               <h3><span class="material-icons-round" style="color: #0ea5e9;">pie_chart</span> ช่องทางการขาย</h3>
               <div class="chart-container">
                   <canvas id="chart-channel"></canvas>
               </div>
           </div>
+          <div class="card">
+              <h3><span class="material-icons-round" style="color: #10b981;">account_balance_wallet</span> การชำระเงิน</h3>
+              <div class="chart-container">
+                  <canvas id="chart-payment"></canvas>
+              </div>
+          </div>
       </div>
 
-      <!-- Bottom Grid -->
-      <div class="dash-bottom-grid">
-          <!-- Top Products -->
+      <!-- Row 3: Tables (50/50) -->
+      <div class="dash-grid-2">
           <div class="card">
-              <h3><span class="material-icons-round" style="color: #f59e0b;">emoji_events</span> สินค้าขายดี (Top Products)</h3>
-              <!-- 4.1 ตารางแบบเลื่อนได้ (Scrollable Table Container) -->
+              <h3><span class="material-icons-round" style="color: #f59e0b;">emoji_events</span> สินค้าขายดี</h3>
               <div class="table-scroll-container">
                   <table class="dash-table">
                       <thead>
@@ -567,38 +572,24 @@
                               <th>ยอดรวม</th>
                           </tr>
                       </thead>
-                      <tbody id="dash-top-products">
-                          <!-- Filled by JS -->
-                      </tbody>
+                      <tbody id="dash-top-products"></tbody>
                   </table>
               </div>
           </div>
-
-          <!-- Payment & Recent -->
-          <div style="display: flex; flex-direction: column; gap: 24px;">
-              <div class="card" style="margin-bottom: 0;">
-                  <h3><span class="material-icons-round" style="color: #10b981;">account_balance_wallet</span> การชำระเงิน (Payment Methods)</h3>
-                  <div style="height: 150px;">
-                      <canvas id="chart-payment"></canvas>
-                  </div>
-              </div>
-              <div class="card" style="margin-bottom: 0; flex: 1;">
-                  <h3><span class="material-icons-round" style="color: #8b5cf6;">schedule</span> ออเดอร์ล่าสุด</h3>
-                  <div class="table-scroll-container">
-                      <table class="dash-table">
-                          <thead>
-                              <tr>
-                                  <th>ID</th>
-                                  <th>ลูกค้า</th>
-                                  <th style="text-align: center;">สถานะ</th>
-                                  <th>ยอดเงิน</th>
-                              </tr>
-                          </thead>
-                          <tbody id="dash-recent-orders">
-                              <!-- Filled by JS -->
-                          </tbody>
-                      </table>
-                  </div>
+          <div class="card">
+              <h3><span class="material-icons-round" style="color: #8b5cf6;">schedule</span> ออเดอร์ล่าสุด</h3>
+              <div class="table-scroll-container">
+                  <table class="dash-table">
+                      <thead>
+                          <tr>
+                              <th>ID</th>
+                              <th>ลูกค้า</th>
+                              <th style="text-align: center;">สถานะ</th>
+                              <th>ยอดเงิน</th>
+                          </tr>
+                      </thead>
+                      <tbody id="dash-recent-orders"></tbody>
+                  </table>
               </div>
           </div>
       </div>
