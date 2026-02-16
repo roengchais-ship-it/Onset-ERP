@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Onset ERP v4.9.8 - Professional Edition</title>
+  <title>Onset ERP v4.9.9 - Professional Edition</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -819,8 +819,22 @@
           </div>
           <div class="card" style="margin-bottom: 0;">
             <h3><span class="material-icons-round" style="vertical-align: middle; color: var(--primary);">settings</span> 2. รายละเอียดการขาย</h3>
+            
             <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">ช่องทางการขาย</label>
-            <select id="in-channel" class="form-control"><option>Facebook</option><option>Line</option><option>Tiktok</option><option>Shopee</option></select>
+            <div class="input-group">
+                <select id="in-channel" class="form-control">
+                    <option>Facebook</option>
+                    <option>Line</option>
+                    <option>Tiktok</option>
+                    <option>Shopee</option>
+                    <option>Lazada</option>
+                    <option value="Claim" style="color: #ef4444; font-weight: bold;">Claim (เคลม)</option>
+                </select>
+                <button type="button" class="btn btn-outline" onclick="addCustomChannel()" style="padding: 0 12px; border-left: none; color: var(--primary);" title="เพิ่มช่องทางใหม่">
+                    <span class="material-icons-round" style="font-size: 18px;">add</span>
+                </button>
+            </div>
+
             <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">วิธีการชำระเงิน</label>
             <select id="in-payment" class="form-control"><option>Transfer</option><option>COD</option></select>
             <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">สถานะเริ่มต้น</label>
@@ -2170,6 +2184,60 @@
         router('orders');
     }
 
+    // --- Custom Channel Logic (เพิ่มช่องทางขายเอง) ---
+    function addCustomChannel() {
+        const newChannel = prompt("ระบุชื่อช่องทางการขายใหม่:");
+        if (newChannel && newChannel.trim() !== "") {
+            const name = newChannel.trim();
+            const select = document.getElementById('in-channel');
+            
+            // ตรวจสอบว่ามีอยู่แล้วหรือไม่
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value.toLowerCase() === name.toLowerCase()) {
+                    select.selectedIndex = i;
+                    return;
+                }
+            }
+
+            // สร้าง Option ใหม่
+            const option = document.createElement("option");
+            option.text = name;
+            option.value = name;
+            option.selected = true;
+            select.add(option, select.options[select.options.length - 1]); // แทรกก่อนตัวสุดท้ายหรือต่อท้าย
+            
+            // บันทึกลง LocalStorage ไว้ใช้ครั้งหน้า
+            saveCustomChannels(name);
+        }
+    }
+
+    function saveCustomChannels(name) {
+        const stored = JSON.parse(localStorage.getItem('custom_channels') || '[]');
+        if (!stored.includes(name)) {
+            stored.push(name);
+            localStorage.setItem('custom_channels', JSON.stringify(stored));
+        }
+    }
+
+    function loadCustomChannels() {
+        const stored = JSON.parse(localStorage.getItem('custom_channels') || '[]');
+        const select = document.getElementById('in-channel');
+        
+        stored.forEach(name => {
+            // เช็คซ้ำก่อนเพิ่ม
+            let exists = false;
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === name) exists = true;
+            }
+            if (!exists) {
+                const option = document.createElement("option");
+                option.text = name;
+                option.value = name;
+                select.add(option);
+            }
+        });
+    }
+
     // --- Packing Logic ---
     function renderPacking() {
         const p = db.orders.filter(o => o.status === 'Paid');
@@ -2722,7 +2790,6 @@
                         </thead>
                         <tbody>
                             ${(order.items || []).map((item, idx) => {
-                                // คำนวณราคาหลังหักส่วนลดต่อหน่วย
                                 const price = Number(item.price);
                                 const discVal = Number(item.discountPerUnit || 0);
                                 const discType = item.discountType || 'THB';
@@ -2866,6 +2933,8 @@
         fetchHistory(); 
         setInterval(() => fetchHistory(true), 300000);
         updateProductDatalist(); 
+        
+        loadCustomChannels(); // Load saved custom channels
     }
 
     window.onload = initApp;
