@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Onset ERP v4.9.5 - Sales Import & Dashboard</title>
+  <title>Onset ERP v4.9.6 - Sales Import & Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <!-- SheetJS for Excel/CSV Import -->
@@ -356,12 +356,12 @@
     .radio-pill.active { border-color: var(--primary); color: var(--primary); background: var(--primary-light); font-weight: 600; }
 
     /* ============================================================
-       FIXED PRINT STYLES (แก้ปัญหาหน้าว่าง และจัดหน้าสวยงาม)
+       FIXED PRINT STYLES (แก้ปัญหาหน้าว่าง, หน้าตัด และ 2 ออเดอร์/หน้า)
        ============================================================ */
     @media print {
       @page { 
         size: A4 portrait; 
-        margin: 0; /* Important: remove browser default margin */
+        margin: 0; 
       }
       
       body, html { 
@@ -369,7 +369,10 @@
         padding: 0; 
         background: white; 
         width: 100%; 
-        height: 100%; /* Fix height */
+        /* UPDATED: Use auto to allow multiple pages to flow naturally */
+        height: auto !important; 
+        overflow: visible !important;
+        position: static !important;
         -webkit-print-color-adjust: exact; 
         print-color-adjust: exact;
       }
@@ -387,34 +390,49 @@
         left: 0;
       }
 
-      /* A4 Page Container */
+      /* Standard A4 Page Container (Full Page for Invoice/Quotation) */
       .print-page { 
         width: 210mm;
-        height: 296mm; /* ลดลง 1mm เพื่อป้องกัน overflow ที่ทำให้เกิดหน้าเปล่า */
+        height: 296mm; /* Full Height */
         margin: 0 auto;
-        padding: 15mm 20mm; /* ระยะขอบกระดาษสวยงาม */
+        padding: 15mm 20mm;
         background: white;
         position: relative; 
-        page-break-after: always; /* บังคับขึ้นหน้าใหม่ทุกออเดอร์ */
-        overflow: hidden; /* ซ่อนส่วนเกิน */
+        page-break-after: always;
+        overflow: hidden; 
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
       }
 
-      /* ป้องกันหน้าสุดท้ายสร้างกระดาษเปล่า */
-      .print-page:last-child { 
-        page-break-after: auto; 
+      /* NEW: A4 Container for 2 Withdrawal Slips */
+      .print-page-a4-split {
+        width: 210mm;
+        height: 296mm;
+        margin: 0 auto;
+        background: white;
+        page-break-after: always;
+        position: relative;
+        box-sizing: border-box;
       }
 
-      /* Specific for Withdrawal/Slips if multiple on one page (Optional) */
-      .print-withdrawal-item { 
-        page-break-inside: avoid; 
-        border-bottom: 2px dashed #999; 
-        padding-bottom: 5mm; 
-        margin-bottom: 5mm; 
-        display: flex; 
-        flex-direction: column; 
+      /* NEW: Half Page Item (Approx A5 Height) */
+      .half-page-item {
+        width: 100%;
+        height: 148mm; /* 296mm / 2 */
+        padding: 10mm 15mm;
+        box-sizing: border-box;
+        overflow: hidden;
+        border-bottom: 1px dashed #999; /* Separator line */
+        display: flex;
+        flex-direction: column;
+      }
+      .half-page-item:last-child {
+        border-bottom: none;
+      }
+
+      .print-page:last-child, .print-page-a4-split:last-child { 
+        page-break-after: auto; 
       }
       
       /* Barcode Page */
@@ -702,8 +720,8 @@
                 <div id="print-dd" class="dropdown-content">
                   <a onclick="bulkPrint('quotation')"><span class="material-icons-round">description</span> ใบเสนอราคา (Quotation)</a>
                   <a onclick="bulkPrint('invoice')"><span class="material-icons-round">receipt</span> ใบเสร็จ/ใบกำกับ (Invoice)</a>
-                  <a onclick="bulkPrint('withdrawal')"><span class="material-icons-round">list_alt</span> ใบเบิกแยกรายการ (Individual Slips)</a>
-                  <a onclick="bulkPrint('combined_withdrawal')"><span class="material-icons-round">inventory_2</span> ใบเบิกแบบรวมรายการ (Summary)</a>
+                  <a onclick="bulkPrint('withdrawal')"><span class="material-icons-round">list_alt</span> ใบเบิก (2 ออเดอร์/หน้า)</a>
+                  <a onclick="bulkPrint('combined_withdrawal')"><span class="material-icons-round">inventory_2</span> ใบเบิกแบบรวม (Pick List)</a>
                 </div>
               </div>
           </div>
@@ -1153,13 +1171,13 @@
   <div id="sync-toast"><span class="material-icons-round" style="color: #38bdf8;">sync</span> <span id="sync-msg">กำลังประมวลผล...</span></div>
   <div id="printable-area"></div>
 
-  <!-- FIREBASE LIBRARIES (ใช้เวอร์ชัน Compat เพื่อให้ใช้ง่ายกับไฟล์เดียว) -->
+  <!-- FIREBASE LIBRARIES -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
 
   <script>
-    // --- 1. FIREBASE SETUP (นำค่าที่คุณให้มาใส่ตรงนี้) ---
+    // --- 1. FIREBASE SETUP ---
     const firebaseConfig = {
       apiKey: "AIzaSyBh404ZM5Ubd3Vly3wK2vQqhN0MccdIWV8",
       authDomain: "order-management-3392a.firebaseapp.com",
@@ -1170,13 +1188,9 @@
       measurementId: "G-D67ZR2LXDS"
     };
 
-    // เริ่มต้นการทำงาน Firebase
     firebase.initializeApp(firebaseConfig);
     const dbFirestore = firebase.firestore();
-
-    // เปิดโหมด Offline (เน็ตหลุดก็ยังขายได้)
-    dbFirestore.enablePersistence({ synchronizeTabs: true })
-        .catch(err => console.log("Persistence Error:", err.code));
+    dbFirestore.enablePersistence({ synchronizeTabs: true }).catch(err => console.log("Persistence Error:", err.code));
   </script>
 
   <script>
@@ -1200,33 +1214,9 @@
     let dashboardState = { period: 'today', showImported: true };
     let dashboardCharts = {};
 
-    // --- Safety Check for LocalStorage ---
-    try {
-      const savedOrders = localStorage.getItem('oms_orders');
-      if (savedOrders) {
-        db.orders = JSON.parse(savedOrders);
-        if (!Array.isArray(db.orders)) db.orders = [];
-      }
-    } catch (e) {
-      console.error("Orders corrupted, resetting...", e);
-      localStorage.removeItem('oms_orders');
-    }
-
-    try {
-      const savedProducts = localStorage.getItem('oms_products');
-      if (savedProducts) {
-        db.products = JSON.parse(savedProducts);
-        if (!Array.isArray(db.products)) db.products = [];
-      }
-    } catch (e) {
-      console.error("Products corrupted, resetting...", e);
-      localStorage.removeItem('oms_products');
-    }
-
-    // --- ประกาศตัวแปร Global ---
     let editingOrderId = null;
     let packingOrderId = null;
-    let currentPackItems = []; // Store packing state {sku, name, needed, scanned}
+    let currentPackItems = []; 
 
     // ============================================
     // 1. ROUTER FUNCTION
@@ -1268,12 +1258,6 @@
       return withTime ? d.toLocaleString('th-TH') : d.toLocaleDateString('th-TH');
     }
 
-    function save() {
-      // localStorage.setItem('oms_orders', JSON.stringify(db.orders));
-      // localStorage.setItem('oms_products', JSON.stringify(db.products));
-      // Legacy Save Disabled - Now using Firestore
-    }
-
     function showToast(msg, dur=3000) {
       const t = document.getElementById('sync-toast');
       document.getElementById('sync-msg').innerText = msg;
@@ -1299,11 +1283,10 @@
     // 3. CORE FUNCTIONS & LOGIC
     // ============================================
     
-    // --- FIREBASE SYNC LOGIC (NEW) ---
+    // --- FIREBASE SYNC LOGIC ---
     function initFirebaseListeners() {
         showToast("กำลังเชื่อมต่อข้อมูล Real-time...", 0);
         
-        // Listen to Orders
         dbFirestore.collection('orders').orderBy('date', 'desc').onSnapshot(snapshot => {
             const orders = [];
             snapshot.forEach(doc => {
@@ -1311,13 +1294,11 @@
             });
             db.orders = orders;
             
-            // Initial render or update
             if(!document.getElementById('view-dashboard').classList.contains('hidden')) renderDashboard();
             if(!document.getElementById('view-orders').classList.contains('hidden')) renderOrders();
             if(!document.getElementById('view-packing').classList.contains('hidden')) renderPacking();
             if(!document.getElementById('view-customers').classList.contains('hidden')) renderCustomers();
             
-            // Hide toast if it's the loading one
             const toast = document.getElementById('sync-toast');
             if(toast.classList.contains('show') && document.getElementById('sync-msg').innerText.includes('กำลังเชื่อมต่อ')) {
                 toast.classList.remove('show');
@@ -1327,7 +1308,6 @@
             showToast("เกิดข้อผิดพลาดในการเชื่อมต่อข้อมูล", 3000);
         });
 
-        // Listen to Products
         dbFirestore.collection('products').onSnapshot(snapshot => {
             const products = [];
             snapshot.forEach(doc => {
@@ -1345,18 +1325,13 @@
     // --- Dashboard & Renderers ---
     function setDashFilter(period) {
         dashboardState.period = period;
-        // Update Buttons
         document.querySelectorAll('.dash-filter-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById('filter-' + period).classList.add('active');
         renderDashboard();
     }
 
-    // IMPROVED: renderDashboard Function
     function renderDashboard() {
-      // 1. Update State from Controls
       dashboardState.showImported = document.getElementById('dash-include-import').checked;
-
-      // 2. Filter Data
       const now = new Date();
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
       const weekStart = new Date(now.setDate(now.getDate() - now.getDay())).setHours(0,0,0,0);
@@ -1372,42 +1347,34 @@
           return true;
       });
 
-      // 3. Calculate KPIs
       const totalSales = filteredOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
       const totalOrders = filteredOrders.length;
       const uniqueCust = new Set(filteredOrders.map(o => o.phone || o.name)).size;
       const shippedCount = filteredOrders.filter(o => o.status === 'Shipped').length;
       const aov = totalOrders > 0 ? totalSales / totalOrders : 0;
 
-      // Update KPI DOM
       document.getElementById('kpi-sales').innerText = '฿' + totalSales.toLocaleString();
       document.getElementById('kpi-orders').innerText = totalOrders.toLocaleString();
       document.getElementById('kpi-customers').innerText = uniqueCust.toLocaleString();
       document.getElementById('kpi-shipped').innerText = shippedCount.toLocaleString();
       document.getElementById('kpi-aov').innerText = '฿' + Math.round(aov).toLocaleString();
 
-      // 4. Charts Preparation
-      // Sales Trend (Date Grouping)
       const salesByDate = {};
       filteredOrders.forEach(o => {
           const d = new Date(o.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
           salesByDate[d] = (salesByDate[d] || 0) + (Number(o.total) || 0);
       });
       
-      // Channel
       const byChannel = {};
       filteredOrders.forEach(o => { byChannel[o.channel || 'Other'] = (byChannel[o.channel || 'Other'] || 0) + 1; });
 
-      // Payment
       const byPayment = {};
       filteredOrders.forEach(o => { byPayment[o.payment || 'Other'] = (byPayment[o.payment || 'Other'] || 0) + 1; });
 
-      // 5. Render Charts
       renderChart('chart-trend', 'line', Object.keys(salesByDate), Object.values(salesByDate), 'ยอดขาย (บาท)', '#4f46e5');
       renderChart('chart-channel', 'bar', Object.keys(byChannel), Object.values(byChannel), 'จำนวนออเดอร์', '#0ea5e9');
       renderChart('chart-payment', 'doughnut', Object.keys(byPayment), Object.values(byPayment), 'Payment', ['#10b981', '#f59e0b', '#6366f1', '#ec4899']);
 
-      // 6. Top Products (IMPROVED RENDERING)
       const productStats = {};
       filteredOrders.forEach(o => {
           if (o.items && Array.isArray(o.items)) {
@@ -1421,7 +1388,7 @@
       });
       const topProducts = Object.entries(productStats)
           .sort((a, b) => b[1].qty - a[1].qty)
-          .slice(0, 5); // Top 5
+          .slice(0, 5);
 
       document.getElementById('dash-top-products').innerHTML = topProducts.length ? topProducts.map(([name, stat]) => `
         <tr>
@@ -1431,7 +1398,6 @@
         </tr>
       `).join('') : '<tr><td colspan="3" style="text-align:center; padding:20px; color: var(--text-muted);">ไม่มีข้อมูล</td></tr>';
 
-      // 7. Recent Orders (IMPROVED RENDERING)
       const recent = filteredOrders.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
       document.getElementById('dash-recent-orders').innerHTML = recent.length ? recent.map(o => `
         <tr>
@@ -1448,7 +1414,6 @@
       `).join('') : '<tr><td colspan="4" style="text-align:center; padding:20px; color: var(--text-muted);">ไม่มีข้อมูล</td></tr>';
     }
 
-    // IMPROVED: Chart Helper
     function renderChart(canvasId, type, labels, data, label, color) {
         if (dashboardCharts[canvasId]) { 
             dashboardCharts[canvasId].destroy(); 
@@ -1462,10 +1427,10 @@
                 datasets: [{
                     label: label,
                     data: data,
-                    backgroundColor: Array.isArray(color) ? color : color + '80', // Opacity for bars
+                    backgroundColor: Array.isArray(color) ? color : color + '80',
                     borderColor: Array.isArray(color) ? color : color,
-                    borderWidth: 2,  // Increased from 1
-                    tension: 0.4,    // Smoother curves
+                    borderWidth: 2,
+                    tension: 0.4,
                     fill: type === 'line'
                 }]
             },
@@ -1474,32 +1439,15 @@
                 maintainAspectRatio: false,
                 plugins: { 
                     legend: { display: type === 'doughnut' },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',  // Dark tooltip
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        padding: 12,  // More padding
-                        cornerRadius: 8  // Rounded corners
-                    }
                 },
                 scales: type === 'doughnut' ? {} : { 
-                    y: { 
-                        beginAtZero: true,
-                        grid: {
-                            color: '#f1f5f9'  // Lighter grid lines
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false  // Hide x-axis grid
-                        }
-                    }
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
                 }
             }
         });
     }
 
-    // New Function for Date Presets
     function applyDatePreset(preset) {
         const startEl = document.getElementById('filter-date-start');
         const endEl = document.getElementById('filter-date-end');
@@ -1516,24 +1464,16 @@
         };
 
         if (preset === 'today') {
-            start = new Date(now);
-            end = new Date(now);
+            start = new Date(now); end = new Date(now);
         } else if (preset === 'yesterday') {
-            start = new Date(now);
-            start.setDate(now.getDate() - 1);
-            end = new Date(start);
+            start = new Date(now); start.setDate(now.getDate() - 1); end = new Date(start);
         } else if (preset === 'last7') {
-            end = new Date(now);
-            start = new Date(now);
-            start.setDate(now.getDate() - 7);
+            end = new Date(now); start = new Date(now); start.setDate(now.getDate() - 7);
         } else if (preset === 'thisMonth') {
             start = new Date(now.getFullYear(), now.getMonth(), 1);
             end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
         } else if (preset === 'clear') {
-            startEl.value = '';
-            endEl.value = '';
-            renderOrders();
-            return;
+            startEl.value = ''; endEl.value = ''; renderOrders(); return;
         }
 
         if (start && end) {
@@ -1550,18 +1490,12 @@
       const dateEnd = document.getElementById('filter-date-end').value;
       
       const filtered = db.orders.filter(o => {
-          // 1. Search Logic
           const matchesSearch = o.id.toLowerCase().includes(search) || o.name.toLowerCase().includes(search);
           
-          // 2. Status/Source Logic
           let matchesFilter = true;
-          if (filter === 'Imported') {
-              matchesFilter = o.order_source === 'imported';
-          } else if (filter) {
-              matchesFilter = o.status === filter;
-          }
+          if (filter === 'Imported') matchesFilter = o.order_source === 'imported';
+          else if (filter) matchesFilter = o.status === filter;
 
-          // 3. Date Logic (New)
           let matchesDate = true;
           if (dateStart || dateEnd) {
               const oDate = new Date(o.date).setHours(0,0,0,0);
@@ -1578,9 +1512,7 @@
           return matchesSearch && matchesFilter && matchesDate;
       });
 
-      // --- NEW TABLE RENDER LOGIC (ERP STYLE) ---
       document.getElementById('order-list-body').innerHTML = filtered.map(o => {
-        // Product List Logic
         let itemsHtml = '';
         if (o.items && Array.isArray(o.items) && o.items.length > 0) {
             itemsHtml = o.items.map(i => `
@@ -1594,12 +1526,9 @@
             itemsHtml = `<span class="text-secondary text-xs">- No Items -</span>`;
         }
 
-        // Imported Badge
         const isImported = o.order_source === 'imported';
         const badgeHtml = isImported ? '<span class="badge badge-Imported" style="font-size:10px; margin-left:4px;">IMP</span>' : '';
-        
-        // Actions Logic (Same logic, new style)
-        const isLocked = isImported; // Imported orders are read-only
+        const isLocked = isImported;
 
         return `
         <tr>
@@ -1612,9 +1541,7 @@
                 <div class="fw-bold text-dark" style="margin-bottom:2px;">${o.name}</div>
                 <div class="text-secondary text-xs"><span class="material-icons-round" style="font-size:12px; vertical-align:middle; margin-right:2px;">event</span>${safeDate(o.date, true)}</div>
             </td>
-            <td>
-                ${itemsHtml}
-            </td>
+            <td>${itemsHtml}</td>
             <td class="text-end">
                 <div class="fw-bold text-dark" style="font-size:15px;">฿${(Number(o.total)||0).toLocaleString()}</div>
             </td>
@@ -1679,7 +1606,6 @@
 
     function renderCustomers() { 
       const uniquePhones = Array.from(new Set(db.orders.map(o => o.phone)));
-      
       const tbody = document.getElementById('customer-list-body');
 
       if (!uniquePhones || uniquePhones.length === 0) {
@@ -1692,7 +1618,6 @@
           return;
       }
 
-      // Map and Sort by Order Count (Desc)
       const list = uniquePhones.map(ph => {
           const firstOrder = db.orders.find(o => o.phone === ph);
           if (!firstOrder) return null;
@@ -1734,19 +1659,14 @@
       }
 
       tbody.innerHTML = db.history.map(o => {
-          // Date Formatting Logic (Improved for Sheets)
-          // 1. Check multiple keys for date
           let rawDate = o.date || o.timestamp || o.Timestamp;
           let d = new Date(rawDate);
           
-          // 2. Handle dd/mm/yyyy format if default parsing fails
           if (isNaN(d.getTime()) && typeof rawDate === 'string') {
-              // Try parsing format like "15/02/2026 10:30:00"
               const parts = rawDate.split(/[\s/:-]/); 
               if (parts.length >= 3) {
-                  // Assume dd/mm/yyyy
                   const day = parseInt(parts[0]);
-                  const month = parseInt(parts[1]) - 1; // Month is 0-indexed
+                  const month = parseInt(parts[1]) - 1; 
                   const year = parseInt(parts[2]);
                   const hour = parts[3] ? parseInt(parts[3]) : 0;
                   const min = parts[4] ? parseInt(parts[4]) : 0;
@@ -1761,13 +1681,11 @@
           const dateStr = isValid ? d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }) : '<span style="color:#94a3b8; font-weight:normal;">ไม่ระบุ</span>';
           const timeStr = isValid ? d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '';
 
-          // Status Badge Logic (Simple mapping)
           let statusColor = '#e2e8f0'; let statusText = '#475569';
           if (o.status === 'Paid') { statusColor = '#dcfce7'; statusText = '#166534'; }
           else if (o.status === 'Shipped') { statusColor = '#fef3c7'; statusText = '#92400e'; }
           else if (o.status === 'New') { statusColor = '#e0f2fe'; statusText = '#075985'; }
 
-          // Item formatting
           let itemsHtml = '<span style="color:#cbd5e1">-</span>';
           if (o.items_summary) {
               const lines = o.items_summary.split('\n').filter(l => l.trim() !== '');
@@ -1814,7 +1732,7 @@
       updateBulk(); 
     }
 
-    // --- Order Import Logic (NEW) ---
+    // --- Order Import Logic ---
     function triggerImportOrder() {
         document.getElementById('import-order-file').click();
     }
@@ -1828,10 +1746,9 @@
             const data = e.target.result;
             let workbook = XLSX.read(data, { type: 'binary' });
             let firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            // Read rows as array of arrays (header included)
             let jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
             processImportData(jsonData);
-            input.value = ''; // Reset
+            input.value = ''; 
         };
         reader.readAsBinaryString(file);
     }
@@ -1853,8 +1770,6 @@
 
             const orderId = String(row[1]).trim();
             
-            // Note: In Firestore real-time, checking `db.orders.some` is valid if db.orders is up to date via listener
-            // Ideally we check Firestore existence, but for bulk import, optimistically using local cache is faster
             if (db.orders.some(o => o.id === orderId)) {
                 if (!orderMap[orderId]) skippedCount++; 
                 continue; 
@@ -1897,7 +1812,6 @@
         });
 
         if (newOrders.length > 0) {
-            // Write to Firestore Batch
             const batch = dbFirestore.batch();
             newOrders.forEach(order => {
                 const ref = dbFirestore.collection('orders').doc(order.id);
@@ -1948,9 +1862,13 @@
         const id = idText.replace('ออเดอร์ ', '');
         const order = db.orders.find(o => o.id === id);
         if (order) { 
-            const wrapperClass = type === 'withdrawal' ? 'print-withdrawal-item' : 'print-page';
-            // Corrected wrapper: Single Item -> Single Print Page
-            document.getElementById('printable-area').innerHTML = `<div class="print-page">${generateCorporateHtml(order, type)}</div>`; 
+            let html = '';
+            if (type === 'withdrawal') {
+                html = `<div class="print-page-a4-split"><div class="half-page-item">${generateWithdrawalHtml(order)}</div></div>`;
+            } else {
+                html = `<div class="print-page">${generateCorporateHtml(order, type)}</div>`; 
+            }
+            document.getElementById('printable-area').innerHTML = html;
             setTimeout(() => { window.print(); document.getElementById('printable-area').innerHTML = ''; }, 500); 
         }
     }
@@ -1960,16 +1878,32 @@
         if (selectedIds.length === 0) return;
         
         let allHtml = '';
+        
         if (type === 'combined_withdrawal') {
-            // Combined withdrawal is a single summary page
             allHtml = `<div class="print-page">${generateCombinedWithdrawalHtml(selectedIds)}</div>`;
-        } else {
-            // Bulk Print Documents: Each order gets a full "print-page" container
+        } 
+        else if (type === 'withdrawal') {
+            // Updated Logic: 2 Orders per Page
+            for (let i = 0; i < selectedIds.length; i += 2) {
+                const id1 = selectedIds[i];
+                const id2 = selectedIds[i+1]; // May be undefined
+
+                const order1 = db.orders.find(o => o.id === id1);
+                const order2 = id2 ? db.orders.find(o => o.id === id2) : null;
+
+                let pageHtml = '<div class="print-page-a4-split">';
+                if(order1) pageHtml += `<div class="half-page-item">${generateWithdrawalHtml(order1)}</div>`;
+                if(order2) pageHtml += `<div class="half-page-item">${generateWithdrawalHtml(order2)}</div>`;
+                pageHtml += '</div>';
+                
+                allHtml += pageHtml;
+            }
+        } 
+        else {
+            // Invoice / Quotation (1 per page)
             selectedIds.forEach(id => {
                 const order = db.orders.find(o => o.id === id);
                 if (order) {
-                     // For 'withdrawal' (individual slips), we can fit 2 per page if needed, but here we do 1 per page for neatness or 2 per page logic:
-                     // Current logic: 1 Order = 1 Page to prevent alignment issues
                      allHtml += `<div class="print-page">${generateCorporateHtml(order, type)}</div>`;
                 }
             });
@@ -1987,7 +1921,6 @@
 
         showToast("กำลังอัปเดตสถานะ...", 0);
         
-        // Write to Firestore Batch
         const batch = dbFirestore.batch();
         let updatedCount = 0;
         
@@ -2005,7 +1938,6 @@
             showToast("เกิดข้อผิดพลาดในการอัปเดต", 3000);
         });
         
-        // Background Sync (Hybrid)
         for (const id of selectedIds) {
            try {
                await fetch(SCRIPT_URL, { 
@@ -2018,17 +1950,14 @@
         }
     }
 
-    // --- New Bulk Delete Function (UI Interaction) ---
     async function bulkDelete() {
         const selectedIds = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(c => c.value);
         if (selectedIds.length === 0) return;
 
-        // UI Confirmation
         if(!confirm(`⚠️ คำเตือน: คุณกำลังจะลบออเดอร์จำนวน ${selectedIds.length} รายการ\n\nการกระทำนี้ไม่สามารถย้อนกลับได้ คุณแน่ใจหรือไม่?`)) return;
 
         showToast("กำลังลบรายการ...", 0);
 
-        // Firestore Batch Delete
         const batch = dbFirestore.batch();
         selectedIds.forEach(id => {
             const ref = dbFirestore.collection('orders').doc(id);
@@ -2043,7 +1972,6 @@
             showToast("เกิดข้อผิดพลาดในการลบ", 3000);
         });
         
-        // Background Sync
         for (const id of selectedIds) {
            try {
                await fetch(SCRIPT_URL, { 
@@ -2069,7 +1997,6 @@
       `;
       document.getElementById('form-items-container').appendChild(div);
       
-      // Update datalist once
       updateProductDatalist();
     }
 
@@ -2106,16 +2033,13 @@
 
     function toggleDropdown(id, event) {
         event.stopPropagation();
-        // Hide others
         document.querySelectorAll('.dropdown-content').forEach(dd => {
             if(dd.id !== id) dd.classList.remove('show');
         });
-        // Toggle target
         const el = document.getElementById(id);
         if(el) el.classList.toggle('show');
     }
 
-    // Close dropdowns when clicking elsewhere
     window.onclick = function(event) {
         if (!event.target.matches('.dropbtn') && !event.target.closest('.dropbtn')) {
             document.querySelectorAll('.dropdown-content').forEach(dd => {
@@ -2127,12 +2051,10 @@
     function deleteOrder(id) {
         if(!confirm('ยืนยันการลบออเดอร์ ' + id + '?')) return;
         
-        // Firebase Delete
         dbFirestore.collection('orders').doc(id).delete()
             .then(() => showToast("ลบออเดอร์เรียบร้อย"))
             .catch(err => console.error("Delete Error", err));
         
-        // Sync delete
         try {
             fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -2162,7 +2084,6 @@
         document.getElementById('in-status').value = o.status;
         
         document.getElementById('form-discount-input').value = o.discount || 0;
-        // Reset rows
         document.getElementById('form-items-container').innerHTML = '';
         if(o.items && o.items.length) {
             o.items.forEach(item => addFormRow(item));
@@ -2206,12 +2127,10 @@
             order_source: 'manual'
         };
 
-        // Firebase Write
         dbFirestore.collection('orders').doc(orderData.id).set(orderData)
             .then(() => showToast(editingOrderId ? "แก้ไขเรียบร้อย" : "บันทึกออเดอร์สำเร็จ"))
             .catch(err => alert("Error saving to cloud: " + err));
 
-        // Hybrid Sync to Sheet
         try {
             await fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -2250,17 +2169,13 @@
         const order = db.orders.find(o => o.id === id);
         if(!order) return;
 
-        // Reset UI
         document.getElementById('pack-idle-state').classList.add('hidden');
         document.getElementById('pack-active-state').classList.remove('hidden');
         
-        // Populate Header
         document.getElementById('pack-order-id').innerText = order.id;
         document.getElementById('pack-customer-name').innerText = order.name;
         
-        // Prepare tracking
         currentPackItems = order.items.map(i => {
-            // Find barcode from products DB
             const prod = db.products.find(p => p.sku === i.sku);
             return {
                 sku: (i.sku || '').toLowerCase().trim(),
@@ -2272,8 +2187,6 @@
         });
         
         renderPackItems();
-        
-        // Focus input
         setTimeout(() => document.getElementById('pack-scan').focus(), 100);
     }
 
@@ -2308,12 +2221,10 @@
         
         document.getElementById('pack-items-list').innerHTML = listHtml;
         
-        // Update Progress
         const percent = totalNeeded > 0 ? Math.floor((totalScanned / totalNeeded) * 100) : 0;
         document.getElementById('pack-progress-bar').style.width = percent + '%';
         document.getElementById('pack-progress-text').innerText = percent + '%';
         
-        // Enable Finish Button if Done
         document.getElementById('btn-finish-pack').disabled = (totalScanned < totalNeeded);
     }
 
@@ -2322,19 +2233,16 @@
             const val = e.target.value.trim().toLowerCase();
             if(!val) return;
             
-            // Logic: Find item match by SKU OR Barcode
             const targetItem = currentPackItems.find(i => 
                 (i.sku === val || i.barcode === val) && i.scanned < i.needed
             );
             
             if (targetItem) {
-                // Success
                 targetItem.scanned++;
                 e.target.value = '';
                 renderPackItems();
                 showToast("ถูกต้อง: " + targetItem.name, 1000);
             } else {
-                // Error / Already full
                 const alreadyFull = currentPackItems.find(i => (i.sku === val || i.barcode === val) && i.scanned >= i.needed);
                 if (alreadyFull) {
                     showToast("สินค้านี้ครบจำนวนแล้ว!", 2000);
@@ -2342,7 +2250,6 @@
                     showToast("ไม่พบสินค้านี้ในออเดอร์!", 2000);
                 }
                 
-                // Visual feedback
                 e.target.classList.add('error');
                 setTimeout(() => e.target.classList.remove('error'), 300);
                 e.target.value = '';
@@ -2365,15 +2272,13 @@
 
       if(!confirm(`ยืนยันการแพ็คออเดอร์ ${order.id} เรียบร้อย?`)) return;
 
-      // Firebase Update
       dbFirestore.collection('orders').doc(order.id).update({ status: 'Shipped' })
         .then(() => showToast("แพ็คสินค้าเรียบร้อย"))
         .catch(e => console.error(e));
       
-      // Return to idle state
       packingOrderId = null;
       renderPacking();
-      renderDashboard(); // Update stats
+      renderDashboard(); 
       document.getElementById('pack-active-state').classList.add('hidden');
       document.getElementById('pack-idle-state').classList.remove('hidden');
 
@@ -2399,7 +2304,6 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             const data = e.target.result;
-            // Use SheetJS to read both CSV and Excel
             const workbook = XLSX.read(data, { type: 'binary' });
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
             const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
@@ -2407,7 +2311,6 @@
             let addedCount = 0;
             const batch = dbFirestore.batch();
             
-            // Start from index 1 to skip header
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row || row.length === 0) continue;
@@ -2477,7 +2380,6 @@
             if (db.products.some(p => p.sku === sku)) { alert('SKU นี้มีอยู่แล้ว'); return; }
         }
         
-        // Cloud Save
         dbFirestore.collection('products').doc(sku).set({ sku, name, price, barcode, image })
             .then(() => {
                 closeModal(null, true);
@@ -2491,7 +2393,6 @@
             .then(() => showToast("ลบสินค้าเรียบร้อย"));
     }
 
-    // --- Delete All Products Function ---
     function deleteAllProducts() {
         if (db.products.length === 0) {
             showToast("ไม่มีสินค้าในคลังให้ลบ", 2000);
@@ -2501,7 +2402,6 @@
         if (!confirm("⚠️ คำเตือน: คุณต้องการลบสินค้าทั้งหมดในคลังใช่หรือไม่?\n\nการกระทำนี้ไม่สามารถกู้คืนได้!")) return;
         if (!confirm("⛔ ยืนยันครั้งสุดท้าย: ลบสินค้าทั้งหมดจริงๆ ใช่ไหม?")) return;
 
-        // Action: Loop delete (Firestore doesn't support collection delete from client SDK easily)
         const batch = dbFirestore.batch();
         db.products.forEach(p => {
             const ref = dbFirestore.collection('products').doc(p.sku);
@@ -2511,7 +2411,6 @@
         batch.commit().then(() => showToast("ล้างข้อมูลสินค้าเรียบร้อยแล้ว", 3000));
     }
     
-    // --- Helper Functions for Image Source ---
     function setImgMode(mode) {
         document.getElementById('mode-url').classList.add('hidden');
         document.getElementById('mode-upload').classList.add('hidden');
@@ -2523,12 +2422,11 @@
     function readUpload(input) {
         if (input.files && input.files[0]) {
             const file = input.files[0];
-            if (file.size > 500000) { // 500KB limit warning
+            if (file.size > 500000) { 
                 alert("ไฟล์มีขนาดใหญ่เกิน 500KB อาจทำให้ระบบช้าลง");
             }
             const reader = new FileReader();
             reader.onload = function(e) {
-                // Update the main hidden/visible input used by save logic
                 document.getElementById('p-image').value = e.target.result; 
                 previewImage(e.target.result);
             }
@@ -2552,22 +2450,17 @@
         }
     }
 
-    // --- Barcode Modal Logic ---
     function openBarcodeModal(sku) {
         const p = db.products.find(x => x.sku === sku);
         if (!p) return;
 
-        // Auto-Generate Barcode if missing (Mock Logic)
         const displayBarcode = p.barcode || '885' + Math.floor(1000000000 + Math.random() * 9000000000); 
-
-        // Store current product data for printing
         window.currentBarcodeProduct = { ...p, displayBarcode };
 
         document.getElementById('bc-prev-name').innerText = p.name;
         document.getElementById('bc-prev-sku').innerText = `SKU: ${p.sku}`;
         document.getElementById('bc-prev-code').innerText = displayBarcode;
         
-        // Handle Image
         const imgEl = document.getElementById('bc-prev-img');
         const noImgEl = document.getElementById('bc-no-img');
         
@@ -2593,13 +2486,11 @@
         const p = window.currentBarcodeProduct;
         if (!p) return;
 
-        // 1. Get Settings
-        const layoutType = document.querySelector('input[name="bc_layout"]:checked').value; // 'label' or 'a4'
+        const layoutType = document.querySelector('input[name="bc_layout"]:checked').value; 
         const showSku = document.getElementById('bc-opt-sku').checked;
         const showName = document.getElementById('bc-opt-name').checked;
         const showPrice = document.getElementById('bc-opt-price').checked;
 
-        // 2. Build Single Sticker HTML
         const imgHtml = p.image 
             ? `<div class="sticker-img"><img src="${p.image}" onerror="this.style.display='none'"></div>` 
             : `<div class="sticker-img" style="background:#f5f5f5; color:#999; font-size:9px;">No IMG</div>`;
@@ -2625,17 +2516,14 @@
             </div>
         `;
 
-        // 3. Layout Construction
         let finalHtml = '';
         if (layoutType === 'a4') {
-            // A4 Grid: Loop 24 times
             let gridItems = '';
             for(let i=0; i<24; i++) {
                 gridItems += `<div class="print-label-item">${stickerHtml}</div>`;
             }
             finalHtml = `<div class="barcode-print-page barcode-grid-a4">${gridItems}</div>`;
         } else {
-            // Single Label
             finalHtml = `<div class="barcode-print-page barcode-single-label">${stickerHtml}</div>`;
         }
 
@@ -2644,8 +2532,6 @@
         
         setTimeout(() => {
             window.print();
-            // Optional: Clear after print
-            // printArea.innerHTML = '';
         }, 500);
     }
     
@@ -2664,20 +2550,98 @@
         }
     }
 
-    // --- Print Document Helpers (UPDATED FOR CLEANER LAYOUT) ---
-    function generateCorporateHtml(order, type) {
-        const titleMap = {
-            'invoice': 'ใบเสร็จรับเงิน / ใบกำกับภาษี',
-            'quotation': 'ใบเสนอราคา (Quotation)',
-            'withdrawal': 'ใบเบิกสินค้า (Withdrawal Slip)'
-        };
-        const title = titleMap[type] || 'เอกสาร';
-        const isWithdrawal = type === 'withdrawal';
-
-        // ใช้ Flexbox และ Table ที่จัดระเบียบดีขึ้น
+    // --- Print Document Helpers (Thai Withdrawal Only) ---
+    function generateWithdrawalHtml(order) {
+        // Thai-only layout, compacted to fit half A4
         return `
             <div style="width:100%; height:100%; display:flex; flex-direction:column; font-family:'Sarabun', sans-serif;">
                 
+                <!-- HEADER (Small & Compact) -->
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 10px;">
+                    <div style="display:flex; gap:10px; width:60%;">
+                         <!-- Optional Logo -->
+                        <div>
+                            <div style="font-weight:700; font-size:16px;">${COMPANY_INFO.name}</div>
+                            <div style="font-size:11px; color:#444;">${COMPANY_INFO.address} โทร: ${COMPANY_INFO.tel}</div>
+                        </div>
+                    </div>
+                    <div style="text-align:right; width:40%;">
+                        <div style="font-weight:700; font-size:18px; text-transform:uppercase;">ใบเบิกสินค้า / ใบจัดของ</div>
+                        <div style="font-size:12px;">เลขที่: <strong>${order.id}</strong> | วันที่: ${safeDate(order.date)}</div>
+                    </div>
+                </div>
+
+                <!-- INFO BOXES (Side by Side) -->
+                <div style="display:flex; border:1px solid #ccc; font-size:12px; margin-bottom:10px;">
+                    <div style="width:60%; padding:8px; border-right:1px solid #ccc;">
+                        <div style="font-weight:700; margin-bottom:2px;">ข้อมูลลูกค้า (Customer)</div>
+                        <div style="font-size:13px;">${order.name}</div>
+                        <div>${order.address}</div>
+                        <div>โทร: ${order.phone}</div>
+                    </div>
+                    <div style="width:40%; padding:8px;">
+                        <div style="font-weight:700; margin-bottom:2px;">ข้อมูลการจัดส่ง</div>
+                        <div style="display:flex; justify-content:space-between;"><span>ขนส่ง:</span> <strong>${order.channel || '-'}</strong></div>
+                        <div style="display:flex; justify-content:space-between;"><span>ชำระเงิน:</span> <strong>${order.payment || '-'}</strong></div>
+                        <div style="display:flex; justify-content:space-between;"><span>สถานะ:</span> <strong>${order.status}</strong></div>
+                    </div>
+                </div>
+
+                <!-- TABLE (Compact, No Price) -->
+                <div style="flex-grow: 1;">
+                    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                        <thead>
+                            <tr style="background:#eee;">
+                                <th style="text-align:center; padding:5px; border:1px solid #ccc; width:40px;">#</th>
+                                <th style="text-align:left; padding:5px; border:1px solid #ccc;">รายการสินค้า</th>
+                                <th style="text-align:center; padding:5px; border:1px solid #ccc; width:60px;">รหัส</th>
+                                <th style="text-align:center; padding:5px; border:1px solid #ccc; width:60px;">จำนวน</th>
+                                <th style="text-align:center; padding:5px; border:1px solid #ccc; width:40px;">เช็ค</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${(order.items || []).map((item, idx) => `
+                                <tr>
+                                    <td style="text-align:center; padding:5px; border:1px solid #ccc;">${idx + 1}</td>
+                                    <td style="text-align:left; padding:5px; border:1px solid #ccc;">${item.name}</td>
+                                    <td style="text-align:center; padding:5px; border:1px solid #ccc;">${item.sku || '-'}</td>
+                                    <td style="text-align:center; padding:5px; border:1px solid #ccc; font-weight:700; font-size:14px;">${item.qty}</td>
+                                    <td style="text-align:center; padding:5px; border:1px solid #ccc;"><div style="width:12px; height:12px; border:1px solid #999; margin:0 auto;"></div></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- FOOTER -->
+                <div style="display:flex; justify-content:space-between; text-align:center; gap:10px; margin-top:15px;">
+                    <div style="flex:1;">
+                        <div style="border-bottom:1px solid #999; height:20px; margin-bottom:5px;"></div>
+                        <div style="font-size:11px;">ผู้จัดของ</div>
+                    </div>
+                     <div style="flex:1;">
+                        <div style="border-bottom:1px solid #999; height:20px; margin-bottom:5px;"></div>
+                        <div style="font-size:11px;">ผู้ตรวจสอบ</div>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="border-bottom:1px solid #999; height:20px; margin-bottom:5px;"></div>
+                        <div style="font-size:11px;">ผู้แพ็ค/ส่ง</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // --- Standard Invoice/Quote (Thai/English) ---
+    function generateCorporateHtml(order, type) {
+        const titleMap = {
+            'invoice': 'ใบเสร็จรับเงิน / ใบกำกับภาษี',
+            'quotation': 'ใบเสนอราคา (Quotation)'
+        };
+        const title = titleMap[type] || 'เอกสาร';
+
+        return `
+            <div style="width:100%; height:100%; display:flex; flex-direction:column; font-family:'Sarabun', sans-serif;">
                 <!-- HEADER -->
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 20px;">
                     <div style="display:flex; gap:15px; width:60%;">
@@ -2733,10 +2697,8 @@
                                 <th style="text-align:center; padding:10px; border-bottom:1px solid #cbd5e1; width:50px;">#</th>
                                 <th style="text-align:left; padding:10px; border-bottom:1px solid #cbd5e1;">รายการสินค้า</th>
                                 <th style="text-align:center; padding:10px; border-bottom:1px solid #cbd5e1; width:80px;">จำนวน</th>
-                                ${!isWithdrawal ? `
                                 <th style="text-align:right; padding:10px; border-bottom:1px solid #cbd5e1; width:100px;">ราคา/หน่วย</th>
                                 <th style="text-align:right; padding:10px; border-bottom:1px solid #cbd5e1; width:120px;">รวม</th>
-                                ` : ''}
                             </tr>
                         </thead>
                         <tbody>
@@ -2748,18 +2710,15 @@
                                         <div style="font-size:11px; color:#94a3b8;">SKU: ${item.sku || '-'}</div>
                                     </td>
                                     <td style="text-align:center; padding:10px; font-weight:600;">${item.qty}</td>
-                                    ${!isWithdrawal ? `
                                     <td style="text-align:right; padding:10px;">${Number(item.price).toLocaleString()}</td>
                                     <td style="text-align:right; padding:10px; font-weight:600;">${(item.qty * item.price).toLocaleString()}</td>
-                                    ` : ''}
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
                 </div>
 
-                <!-- TOTAL SECTION (Fixed to bottom relative to table content) -->
-                ${!isWithdrawal ? `
+                <!-- TOTAL -->
                 <div style="display:flex; justify-content:flex-end; margin-top:20px; page-break-inside: avoid;">
                     <div style="width:250px;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:13px;">
@@ -2776,9 +2735,8 @@
                         </div>
                     </div>
                 </div>
-                ` : ''}
 
-                <!-- FOOTER (SIGNATURES) - Pushed to bottom -->
+                <!-- FOOTER -->
                 <div style="margin-top:auto; padding-top:40px; page-break-inside: avoid;">
                     <div style="display:flex; justify-content:space-between; text-align:center; gap:20px;">
                         <div style="flex:1;">
@@ -2798,7 +2756,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         `;
     }
@@ -2849,7 +2806,7 @@
         `;
     }
     
-    // --- Sync Functions (Fixed) ---
+    // --- Sync Functions ---
     async function fetchHistory(isAuto = false) {
       if(!isAuto) showToast("กำลังดึงข้อมูลล่าสุดจาก Sheet...", 0);
       try {
@@ -2865,7 +2822,7 @@
 
     // --- Boot ---
     function initApp() {
-        initFirebaseListeners(); // Start Real-time Listeners immediately
+        initFirebaseListeners(); 
         router('dashboard'); 
         fetchHistory(); 
         setInterval(() => fetchHistory(true), 300000);
