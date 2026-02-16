@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Onset ERP v4.9.9 - Professional Edition</title>
+  <title>Onset ERP v4.9.10 - CRM & Professional Edition</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -995,21 +995,49 @@
                 <span class="material-icons-round" style="font-size: 28px;">groups</span>
             </div>
             <div>
-                <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: var(--text-main);">ฐานข้อมูลลูกค้า</h2>
-                <div style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">รายชื่อลูกค้าทั้งหมดและประวัติการสั่งซื้อ</div>
+                <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: var(--text-main);">ฐานข้อมูลลูกค้า (CRM)</h2>
+                <div style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">วิเคราะห์พฤติกรรมและประวัติการสั่งซื้อ</div>
             </div>
         </div>
       </div>
+
+      <div class="dash-kpi-grid" style="grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 24px;">
+          <div class="dash-kpi-card" style="flex-direction: row; align-items: center; justify-content: space-between; padding: 20px 24px;">
+              <div>
+                  <div class="dash-kpi-title" style="margin-bottom: 8px;">ลูกค้าทั้งหมด (Total Customers)</div>
+                  <div class="dash-kpi-value" id="cust-total-count" style="color: var(--primary);">0</div>
+                  <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">นับจากเบอร์โทรศัพท์ที่ไม่ซ้ำ</div>
+              </div>
+              <div style="width: 60px; height: 60px; background: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                  <span class="material-icons-round" style="color: var(--primary); font-size: 32px;">person_add</span>
+              </div>
+          </div>
+          <div class="dash-kpi-card" style="flex-direction: row; align-items: center; justify-content: space-between; padding: 20px 24px;">
+              <div style="flex: 1; padding-right: 10px;">
+                  <div class="dash-kpi-title" style="margin-bottom: 8px;">สินค้าซื้อซ้ำบ่อยสุด (Top Product)</div>
+                  <div class="dash-kpi-value" id="cust-top-product" style="font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</div>
+                  <div style="font-size: 12px; color: var(--status-paid-text); margin-top: 4px; font-weight: 600;" id="cust-top-product-qty">ขายแล้ว 0 ชิ้น</div>
+              </div>
+              <div style="width: 60px; height: 60px; background: #fff7ed; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                  <span class="material-icons-round" style="color: #c2410c; font-size: 32px;">stars</span>
+              </div>
+          </div>
+      </div>
       
       <div class="card" style="padding: 0; overflow: hidden; border: none; box-shadow: var(--shadow-sm); min-height: 60vh;">
+        <div style="padding: 16px; border-bottom: 1px solid var(--border); background: #fff;">
+            <input type="text" id="cust-search" class="form-control" style="margin-bottom: 0; max-width: 300px;" placeholder="ค้นหาชื่อ หรือ เบอร์โทร..." onkeyup="renderCustomers()">
+        </div>
         <div class="table-scroll-container">
              <table class="table-erp">
               <thead>
                 <tr>
-                    <th style="width:25%; padding-left: 24px;">ชื่อลูกค้า</th>
-                    <th style="width:20%;">เบอร์โทรศัพท์</th>
-                    <th>ที่อยู่จัดส่ง</th>
-                    <th style="width:15%; text-align: center;">จำนวนคำสั่งซื้อ</th>
+                    <th style="width: 60px; text-align: center;">#</th>
+                    <th style="padding-left: 16px;">ชื่อลูกค้า</th>
+                    <th>ข้อมูลติดต่อ / ที่อยู่</th>
+                    <th style="text-align: center;">สั่งล่าสุด</th>
+                    <th style="text-align: center;">จำนวนครั้ง</th>
+                    <th style="text-align: right; padding-right: 24px;">ยอดซื้อรวม</th>
                 </tr>
               </thead>
               <tbody id="customer-list-body"></tbody>
@@ -1600,44 +1628,119 @@
     }
 
     function renderCustomers() { 
-      const uniquePhones = Array.from(new Set(db.orders.map(o => o.phone)));
-      const tbody = document.getElementById('customer-list-body');
+        const searchTerm = (document.getElementById('cust-search')?.value || '').toLowerCase();
+        
+        // 1. Group Data by Phone (สร้างฐานข้อมูลลูกค้าจากออเดอร์)
+        const customerMap = {};
+        const productFrequency = {};
 
-      if (!uniquePhones || uniquePhones.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 60px 20px; color: var(--text-muted);">
-            <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
-                <span class="material-icons-round" style="font-size:48px; color:#e2e8f0;">person_off</span>
-                <span>ยังไม่มีข้อมูลลูกค้าในระบบ</span>
-            </div>
-          </td></tr>`;
-          return;
-      }
+        db.orders.forEach(o => {
+            const phone = o.phone ? o.phone.trim() : 'No Phone';
+            if(phone === 'No Phone' && !o.name) return; 
+            
+            const key = phone === 'No Phone' ? o.name : phone;
 
-      const list = uniquePhones.map(ph => {
-          const firstOrder = db.orders.find(o => o.phone === ph);
-          if (!firstOrder) return null;
-          const count = db.orders.filter(o => o.phone === ph).length;
-          return { ...firstOrder, count };
-      }).filter(x => x).sort((a, b) => b.count - a.count);
+            if (!customerMap[key]) {
+                customerMap[key] = {
+                    name: o.name || 'ไม่ระบุชื่อ',
+                    phone: o.phone || '-',
+                    address: o.address || '-',
+                    orderCount: 0,
+                    totalSpent: 0,
+                    lastOrderDate: o.date,
+                    firstLetter: (o.name || '?').charAt(0).toUpperCase()
+                };
+            }
 
-      tbody.innerHTML = list.map(c => `
-        <tr>
-            <td style="padding-left: 24px; vertical-align: top;">
-                <div style="font-weight: 600; color: var(--text-main); font-size: 14px;">${c.name || '-'}</div>
-            </td>
-            <td style="vertical-align: top;">
-                <div class="font-mono" style="color: var(--text-main); font-size: 14px;">${c.phone || '-'}</div>
-            </td>
-            <td style="vertical-align: top;">
-                <div style="font-size: 13px; color: #475569; line-height: 1.6; white-space: pre-wrap; max-width: 450px;">${c.address || '-'}</div>
-            </td>
-            <td style="text-align: center; vertical-align: top;">
-                <span class="badge" style="background: #eef2ff; color: var(--primary); font-weight: 600; padding: 6px 12px; border-radius: 8px; font-size: 13px;">
-                    ${c.count} ออเดอร์
-                </span>
-            </td>
-        </tr>
-      `).join(''); 
+            const cust = customerMap[key];
+            cust.orderCount++;
+            cust.totalSpent += Number(o.total || 0);
+            
+            if (new Date(o.date) > new Date(cust.lastOrderDate)) {
+                cust.lastOrderDate = o.date;
+                cust.address = o.address;
+                cust.name = o.name;
+            }
+
+            if (o.items && Array.isArray(o.items)) {
+                o.items.forEach(i => {
+                    productFrequency[i.name] = (productFrequency[i.name] || 0) + Number(i.qty);
+                });
+            }
+        });
+
+        // 2. Calculate Dashboard KPIs
+        const uniqueCustomers = Object.keys(customerMap).length;
+        document.getElementById('cust-total-count').innerText = uniqueCustomers.toLocaleString();
+
+        let topProdName = "-";
+        let topProdQty = 0;
+        for (const [name, qty] of Object.entries(productFrequency)) {
+            if (qty > topProdQty) {
+                topProdQty = qty;
+                topProdName = name;
+            }
+        }
+        document.getElementById('cust-top-product').innerText = topProdName;
+        document.getElementById('cust-top-product-qty').innerText = `ขายแล้ว ${topProdQty.toLocaleString()} ชิ้น`;
+
+        // 3. Render Table
+        const tbody = document.getElementById('customer-list-body');
+        const customersArray = Object.values(customerMap);
+
+        customersArray.sort((a, b) => b.totalSpent - a.totalSpent);
+
+        const filtered = customersArray.filter(c => 
+            c.name.toLowerCase().includes(searchTerm) || 
+            c.phone.toLowerCase().includes(searchTerm)
+        );
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 60px 20px; color: var(--text-muted);">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+                    <span class="material-icons-round" style="font-size:48px; color:#e2e8f0;">person_off</span>
+                    <span>ไม่พบข้อมูลลูกค้า</span>
+                </div>
+            </td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map((c, index) => {
+            const colors = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'];
+            const colorIndex = c.firstLetter.charCodeAt(0) % colors.length;
+            const avatarBg = colors[colorIndex];
+
+            return `
+            <tr>
+                <td style="text-align: center; vertical-align: middle;">
+                    <div style="width: 36px; height: 36px; background: ${avatarBg}; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; margin: 0 auto;">
+                        ${c.firstLetter}
+                    </div>
+                </td>
+                <td style="padding-left: 16px; vertical-align: middle;">
+                    <div style="font-weight: 600; color: var(--text-main); font-size: 14px;">${c.name}</div>
+                    ${c.totalSpent > 5000 ? '<span style="font-size: 10px; background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-weight: 600;">VIP</span>' : ''}
+                </td>
+                <td style="vertical-align: middle;">
+                    <div style="font-family: monospace; color: var(--primary); font-weight: 600; margin-bottom: 2px;">${c.phone}</div>
+                    <div style="font-size: 12px; color: #64748b; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;">
+                        ${c.address}
+                    </div>
+                </td>
+                <td style="text-align: center; vertical-align: middle;">
+                    <div style="font-size: 13px;">${safeDate(c.lastOrderDate)}</div>
+                </td>
+                <td style="text-align: center; vertical-align: middle;">
+                    <span class="badge" style="background: #f1f5f9; color: var(--text-main); font-weight: 600; min-width: 30px; justify-content: center;">
+                        ${c.orderCount}
+                    </span>
+                </td>
+                <td style="text-align: right; vertical-align: middle; padding-right: 24px;">
+                    <div style="font-weight: 700; color: var(--primary); font-size: 14px;">฿${c.totalSpent.toLocaleString()}</div>
+                </td>
+            </tr>
+            `;
+        }).join(''); 
     }
 
     function renderHistory() { 
@@ -2790,6 +2893,7 @@
                         </thead>
                         <tbody>
                             ${(order.items || []).map((item, idx) => {
+                                // คำนวณราคาหลังหักส่วนลดต่อหน่วย
                                 const price = Number(item.price);
                                 const discVal = Number(item.discountPerUnit || 0);
                                 const discType = item.discountType || 'THB';
