@@ -2,7 +2,8 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 1. ปรับ Viewport ให้ล็อคการซูมและการขยับที่ไม่จำเป็น -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Onset ERP v4.9.5 - Sales Import & Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -47,18 +48,24 @@
       --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    * { box-sizing: border-box; outline: none; }
+    * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
     
+    html { height: 100%; overflow: hidden; }
+
     body { 
       font-family: 'Sarabun', sans-serif; 
       background: var(--bg-body); 
       color: var(--text-main); 
       margin: 0; 
       display: flex; 
-      height: 100vh; 
+      /* 2. ล็อคความสูงและความกว้างของ Body */
+      height: 100%; 
+      width: 100%;
+      position: fixed; /* เทคนิคสำหรับ iOS */
       overflow: hidden; 
       font-size: 14px;
       -webkit-font-smoothing: antialiased;
+      overscroll-behavior: none; /* ห้ามเด้งเมื่อรูดสุดขอบ */
     }
 
     /* --- SCROLLBAR --- */
@@ -76,7 +83,7 @@
       flex-direction: column; 
       padding: 24px 16px; 
       flex-shrink: 0; 
-      z-index: 20; 
+      z-index: 100; 
       box-shadow: 4px 0 24px rgba(0,0,0,0.05);
     }
     
@@ -104,6 +111,7 @@
       transition: var(--transition); 
       font-weight: 500;
       font-size: 14px;
+      white-space: nowrap; /* ห้ามตัดคำ */
     }
     
     .nav-item:hover { 
@@ -121,12 +129,15 @@
     /* --- MAIN CONTENT --- */
     .main-content { 
       flex: 1; 
+      /* 3. ให้ Scroll ได้เฉพาะส่วนเนื้อหา */
       overflow-y: auto; 
-      padding: 32px 40px; /* IMPROVED: Increased padding */
+      overflow-x: hidden;
+      padding: 32px 40px; 
       position: relative; 
+      height: 100%;
+      -webkit-overflow-scrolling: touch; /* สัมผัสลื่นๆ บนมือถือ */
     }
     
-    /* IMPROVED: Page Title */
     .page-title { 
       font-size: 28px; 
       font-weight: 700; 
@@ -139,7 +150,6 @@
     }
 
     /* --- COMPONENTS --- */
-    /* IMPROVED: Card Styles */
     .card { 
       background: var(--surface); 
       border-radius: var(--radius-lg); 
@@ -154,7 +164,6 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.06); 
     }
     
-    /* IMPROVED: Card Header */
     .card h3 { 
       margin-top: 0; 
       margin-bottom: 24px; 
@@ -168,244 +177,90 @@
       gap: 8px;
     }
 
-    /* --- DASHBOARD STYLES (IMPROVED) --- */
+    /* --- DASHBOARD STYLES --- */
     .dash-controls { 
-      display: flex; 
-      gap: 10px; 
-      margin-bottom: 32px; 
-      align-items: center; 
-      flex-wrap: wrap; 
+      display: flex; gap: 10px; margin-bottom: 32px; align-items: center; flex-wrap: wrap; 
     }
 
     .dash-filter-btn { 
-      padding: 8px 20px; 
-      border-radius: 20px; 
-      border: 1px solid var(--border); 
-      background: white; 
-      cursor: pointer; 
-      font-size: 13px; 
-      color: var(--text-muted); 
-      transition: all 0.2s; 
-      font-weight: 500; 
+      padding: 8px 20px; border-radius: 20px; border: 1px solid var(--border); background: white; 
+      cursor: pointer; font-size: 13px; color: var(--text-muted); transition: all 0.2s; font-weight: 500; 
     }
 
     .dash-filter-btn.active { 
-      background: var(--primary); 
-      color: white; 
-      border-color: var(--primary); 
+      background: var(--primary); color: white; border-color: var(--primary); 
       box-shadow: 0 2px 8px rgba(67, 56, 202, 0.25); 
     }
     
-    /* IMPROVED: KPI Grid & Cards */
     .dash-kpi-grid { 
-      display: grid; 
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-      gap: 20px; 
-      margin-bottom: 32px; 
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px; 
     }
 
     .dash-kpi-card { 
-      background: white; 
-      padding: 24px; 
-      border-radius: var(--radius-lg); 
-      border: 1px solid var(--border); 
-      box-shadow: var(--shadow-sm); 
-      display: flex; 
-      flex-direction: column; 
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-      transition: var(--transition);
+      background: white; padding: 24px; border-radius: var(--radius-lg); border: 1px solid var(--border); 
+      box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: center; 
+      position: relative; overflow: hidden; transition: var(--transition); 
     }
 
-    /* Accent bar */
     .dash-kpi-card::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 4px;
-      height: 100%;
-      background: var(--primary);
-      opacity: 0;
-      transition: opacity 0.2s;
+      content: ''; position: absolute; left: 0; top: 0; width: 4px; height: 100%; 
+      background: var(--primary); opacity: 0; transition: opacity 0.2s; 
     }
 
-    .dash-kpi-card:hover {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      transform: translateY(-2px);
-    }
+    .dash-kpi-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+    .dash-kpi-card:hover::before { opacity: 1; }
 
-    .dash-kpi-card:hover::before {
-      opacity: 1;
-    }
-
-    .dash-kpi-title { 
-      font-size: 11px; 
-      color: var(--text-muted); 
-      text-transform: uppercase; 
-      font-weight: 600; 
-      margin-bottom: 12px; 
-      letter-spacing: 0.8px; 
-    }
-
-    .dash-kpi-value { 
-      font-size: 32px; 
-      font-weight: 800; 
-      color: var(--text-main); 
-      display: flex; 
-      align-items: baseline; 
-      gap: 6px;
-      line-height: 1;
-    }
+    .dash-kpi-title { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.8px; }
+    .dash-kpi-value { font-size: 32px; font-weight: 800; color: var(--text-main); display: flex; align-items: baseline; gap: 6px; line-height: 1; }
     
     .dash-charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
     .dash-bottom-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 24px; }
     
-    /* IMPROVED: Chart Container */
-    .chart-container { 
-      position: relative; 
-      height: 280px; 
-      width: 100%; 
-    }
+    .chart-container { position: relative; height: 280px; width: 100%; }
     
-    /* IMPROVED: Dashboard Table */
-    .dash-table { 
-      width: 100%; 
-      border-collapse: collapse; 
-      font-size: 13px;
+    /* --- TABLE STYLES & LOCKING --- */
+    
+    /* 4. สร้าง Container สำหรับตารางให้เลื่อนแนวนอนได้เฉพาะในกรอบ */
+    .table-scroll-container {
+        width: 100%;
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: white;
     }
 
-    .dash-table thead th { 
-      text-align: left;
-      padding: 12px 16px;
-      font-weight: 700;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--text-muted);
-      border-bottom: 2px solid var(--border);
-    }
+    .dash-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; /* บังคับความกว้างขั้นต่ำ */ }
+    .dash-table thead th { text-align: left; padding: 12px 16px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+    .dash-table thead th:last-child { text-align: right; }
+    .dash-table tbody td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; color: var(--text-main); }
+    .dash-table tbody td:last-child { text-align: right; font-weight: 600; }
+    .dash-table tbody tr:hover { background: #f8fafc; }
+    .dash-table tbody tr:last-child td { border-bottom: none; }
 
-    .dash-table thead th:last-child {
-      text-align: right;
-    }
-
-    .dash-table tbody td { 
-      padding: 14px 16px;
-      border-bottom: 1px solid #f1f5f9;
-      color: var(--text-main);
-    }
-
-    .dash-table tbody td:last-child {
-      text-align: right;
-      font-weight: 600;
-    }
-
-    .dash-table tbody tr:hover {
-      background: #f8fafc;
-    }
-
-    .dash-table tbody tr:last-child td {
-      border-bottom: none;
-    }
-
-    @media (max-width: 1000px) { 
-        .dash-charts-grid, .dash-bottom-grid { grid-template-columns: 1fr; } 
-    }
+    @media (max-width: 1000px) { .dash-charts-grid, .dash-bottom-grid { grid-template-columns: 1fr; } }
 
     /* --- FORM ELEMENTS --- */
-    .form-control {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      font-family: inherit;
-      font-size: 14px;
-      color: var(--text-main);
-      background: #fff;
-      transition: var(--transition);
-      margin-bottom: 12px;
-    }
-    .form-control:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-    }
+    .form-control { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-md); font-family: inherit; font-size: 14px; color: var(--text-main); background: #fff; transition: var(--transition); margin-bottom: 12px; }
+    .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
     textarea.form-control { resize: vertical; min-height: 80px; }
-
-    /* Input Group */
     .input-group { display: flex; gap: 0; }
     .input-group .form-control:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-bottom: 0;}
     .input-group .form-control:last-child { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-bottom: 0; border-left: none; width: auto;}
 
-    /* Item List Row */
-    .item-list-row {
-      display: grid;
-      grid-template-columns: 2fr 1.5fr 0.8fr 1fr auto;
-      gap: 10px;
-      margin-bottom: 10px;
-      align-items: start;
-    }
+    .item-list-row { display: grid; grid-template-columns: 2fr 1.5fr 0.8fr 1fr auto; gap: 10px; margin-bottom: 10px; align-items: start; }
     .item-list-row .form-control { margin-bottom: 0; }
 
     /* --- TABLE (ERP PROFESSIONAL) --- */
-    table { width: 100%; border-collapse: separate; border-spacing: 0; }
-    
-    .table-erp { 
-        width: 100%; 
-        border-collapse: separate; 
-        border-spacing: 0; 
-        border: 1px solid var(--border); 
-        border-radius: var(--radius-lg); 
-        overflow: hidden; 
-        background: white;
-    }
-    
-    .table-erp th { 
-      background: #f1f5f9; 
-      color: #64748b; 
-      font-weight: 700; 
-      text-transform: uppercase; 
-      font-size: 11px; 
-      letter-spacing: 0.8px;
-      padding: 14px 20px; 
-      border-bottom: 1px solid var(--border); 
-      position: sticky; 
-      top: 0; 
-      z-index: 10;
-    }
-
-    .table-erp td { 
-        padding: 16px 20px; 
-        border-bottom: 1px solid var(--border); 
-        vertical-align: middle; 
-        color: var(--text-main); 
-        font-size: 14px; 
-        background: #fff; 
-        transition: background 0.15s; 
-    }
-    
+    .table-erp { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 800px; /* บังคับความกว้างขั้นต่ำ */ }
+    .table-erp th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.8px; padding: 14px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    .table-erp td { padding: 16px 20px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text-main); font-size: 14px; background: #fff; transition: background 0.15s; }
     .table-erp tr:last-child td { border-bottom: none; }
     .table-erp tr:hover td { background: #f8fafc; }
-    
-    /* Logic: Visual Hierarchy for "New" Orders */
-    .table-erp tr:has(.badge-New) {
-        background-color: #f5faff !important;
-    }
-    .table-erp tr:has(.badge-New) td {
-        background-color: #f5faff !important;
-        font-weight: 500;
-    }
-    .table-erp tr:has(.badge-New) td:first-child {
-        box-shadow: inset 4px 0 0 var(--primary); 
-    }
-    
-    /* Dim shipped orders */
-    .table-erp tr:has(.badge-Shipped) td {
-        color: var(--text-muted);
-    }
+    .table-erp tr:has(.badge-New) { background-color: #f5faff !important; }
+    .table-erp tr:has(.badge-New) td { background-color: #f5faff !important; font-weight: 500; }
+    .table-erp tr:has(.badge-New) td:first-child { box-shadow: inset 4px 0 0 var(--primary); }
+    .table-erp tr:has(.badge-Shipped) td { color: var(--text-muted); }
 
-    /* Column Specifics */
     .col-checkbox { width: 40px; text-align: center; }
     .font-mono { font-family: 'Courier New', Courier, monospace; letter-spacing: -0.5px; font-weight: 600; }
     .text-end { text-align: right; }
@@ -415,167 +270,56 @@
     .text-xs { font-size: 12px; }
     .fw-bold { font-weight: 600; }
     
-    /* Product Item Style */
     .erp-item { display: flex; align-items: baseline; margin-bottom: 4px; font-size: 13px; line-height: 1.4; }
     .erp-item-name { color: #334155; font-weight: 500; margin-right: 6px; }
     .erp-item-sku { color: #94a3b8; font-size: 11px; margin-right: auto; font-family: monospace; }
     .erp-item-qty { background: #e2e8f0; color: #475569; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; white-space: nowrap; }
     
-    /* Action Buttons Style */
     .action-btn { background: transparent; border: none; color: #94a3b8; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; display: inline-flex; }
     .action-btn:hover { background: #eef2ff; color: var(--primary); }
     .action-btn.delete:hover { background: #fee2e2; color: #ef4444; }
 
-    /* --- BUTTONS --- */
-    .btn { 
-      padding: 10px 18px; 
-      border-radius: var(--radius-md); 
-      border: 1px solid transparent; 
-      font-weight: 600; 
-      cursor: pointer; 
-      display: inline-flex; 
-      align-items: center; 
-      justify-content: center;
-      gap: 8px; 
-      transition: var(--transition); 
-      font-family: inherit; 
-      font-size: 14px;
-      box-shadow: var(--shadow-sm);
-    }
-    
+    /* --- BUTTONS & BADGES --- */
+    .btn { padding: 10px 18px; border-radius: var(--radius-md); border: 1px solid transparent; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: var(--transition); font-family: inherit; font-size: 14px; box-shadow: var(--shadow-sm); }
     .btn:active { transform: translateY(1px); }
-
-    .btn-primary { 
-      background: var(--primary); 
-      color: white; 
-      box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
-    }
+    .btn-primary { background: var(--primary); color: white; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2); }
     .btn-primary:hover { background: var(--primary-accent); box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3); }
-
-    .btn-outline { 
-      background: white; 
-      border: 1px solid var(--border); 
-      color: var(--text-main); 
-    }
+    .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-main); }
     .btn-outline:hover { background: #f8fafc; border-color: #cbd5e1; }
-
     .btn-danger { background: #fee2e2; color: #991b1b; border-color: transparent; }
     .btn-danger:hover { background: #fecaca; }
-    
-    .btn-soft-danger { 
-        background: #fff1f2; 
-        color: #b91c1c; 
-        border: 1px solid #fecaca; 
-    }
-    .btn-soft-danger:hover { 
-        background: #fee2e2;
-        box-shadow: var(--shadow-sm);
-    }
-
+    .btn-soft-danger { background: #fff1f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .btn-soft-danger:hover { background: #fee2e2; box-shadow: var(--shadow-sm); }
     .btn-success { background: var(--status-paid-bg); color: var(--status-paid-text); border: 1px solid #bbf7d0; }
     .btn-warning { background: var(--warning-bg); color: var(--warning-text); }
-    
     .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
     .btn-lg { padding: 12px 24px; font-size: 16px; border-radius: 8px; }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(1); }
 
-    /* --- BADGES (High Visibility) --- */
-    .badge { 
-      padding: 6px 12px; 
-      border-radius: 99px; /* Pill shape */
-      font-size: 11px; 
-      font-weight: 700; 
-      text-transform: uppercase; 
-      display: inline-flex; 
-      align-items: center; 
-      gap: 6px; 
-      letter-spacing: 0.5px;
-      line-height: 1;
-      white-space: nowrap;
-    }
-    
-    /* NEW Badge - Needs to POP */
-    .badge-New { 
-        background: var(--status-new-bg); 
-        color: var(--status-new-text); 
-        box-shadow: 0 2px 5px rgba(79, 70, 229, 0.4); /* Glow effect */
-        border: 1px solid transparent;
-    }
-    
-    .badge-Paid { 
-        background: var(--status-paid-bg); 
-        color: var(--status-paid-text); 
-        border: 1px solid #bbf7d0;
-    }
-    
-    .badge-Shipped { 
-        background: var(--status-shipped-bg); 
-        color: var(--status-shipped-text); 
-        border: 1px solid #e2e8f0; 
-    }
-    
+    .badge { padding: 6px 12px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; letter-spacing: 0.5px; line-height: 1; white-space: nowrap; }
+    .badge-New { background: var(--status-new-bg); color: var(--status-new-text); box-shadow: 0 2px 5px rgba(79, 70, 229, 0.4); border: 1px solid transparent; }
+    .badge-Paid { background: var(--status-paid-bg); color: var(--status-paid-text); border: 1px solid #bbf7d0; }
+    .badge-Shipped { background: var(--status-shipped-bg); color: var(--status-shipped-text); border: 1px solid #e2e8f0; }
     .badge-Imported { background: var(--status-imported-bg); color: var(--status-imported-text); border: 1px solid #e9d5ff; }
 
-    /* --- BULK ACTION BAR --- */
-    .bulk-action-bar {
-      display: flex; align-items: center; justify-content: space-between; 
-      background: var(--surface); color: var(--primary);
-      padding: 0 24px; border-radius: var(--radius-lg); margin-bottom: 0; 
-      border: 1px solid var(--primary-light);
-      box-shadow: var(--shadow-float);
-      opacity: 0; pointer-events: none; transition: all 0.2s ease-in-out; 
-      height: 0; overflow: hidden; transform: translateY(-10px);
-      position: relative; z-index: 900;
-    }
-    .bulk-action-bar.active { 
-      opacity: 1; pointer-events: all; height: 70px; padding: 0 24px; 
-      margin-bottom: 24px; transform: translateY(0);
-      overflow: visible; 
-    }
-
-    /* --- DROPDOWN --- */
+    /* --- BULK ACTION & DROPDOWN --- */
+    .bulk-action-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface); color: var(--primary); padding: 0 24px; border-radius: var(--radius-lg); margin-bottom: 0; border: 1px solid var(--primary-light); box-shadow: var(--shadow-float); opacity: 0; pointer-events: none; transition: all 0.2s ease-in-out; height: 0; overflow: hidden; transform: translateY(-10px); position: relative; z-index: 900; }
+    .bulk-action-bar.active { opacity: 1; pointer-events: all; height: 70px; padding: 0 24px; margin-bottom: 24px; transform: translateY(0); overflow: visible; }
     .dropdown { position: relative; display: inline-block; }
-    .dropbtn {
-      background-color: white; color: var(--text-main); 
-      padding: 8px 16px; font-size: 14px; border: 1px solid var(--border); 
-      cursor: pointer; border-radius: var(--radius-md);
-      display: flex; align-items: center; gap: 6px; font-weight: 600; font-family: inherit;
-      transition: var(--transition);
-    }
+    .dropbtn { background-color: white; color: var(--text-main); padding: 8px 16px; font-size: 14px; border: 1px solid var(--border); cursor: pointer; border-radius: var(--radius-md); display: flex; align-items: center; gap: 6px; font-weight: 600; font-family: inherit; transition: var(--transition); }
     .dropbtn:hover { background: #f8fafc; border-color: var(--text-light); }
-    
-    .dropdown-content {
-      display: none; position: absolute; right: 0; top: 120%; 
-      background-color: white; min-width: 220px;
-      box-shadow: var(--shadow-float); z-index: 1000; 
-      border-radius: var(--radius-lg); border: 1px solid var(--border);
-      padding: 6px; animation: slideDown 0.2s ease-out;
-    }
+    .dropdown-content { display: none; position: absolute; right: 0; top: 120%; background-color: white; min-width: 220px; box-shadow: var(--shadow-float); z-index: 1000; border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 6px; animation: slideDown 0.2s ease-out; }
     .dropdown-content.show { display: block; }
-
-    @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
-    
-    .dropdown-content a {
-      color: var(--text-main); padding: 10px 16px; 
-      text-decoration: none; display: flex; align-items: center; gap: 10px; 
-      font-size: 14px; cursor: pointer; border-radius: var(--radius-md);
-    }
+    .dropdown-content a { color: var(--text-main); padding: 10px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; border-radius: var(--radius-md); }
     .dropdown-content a:hover { background-color: var(--primary-light); color: var(--primary); }
+    @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
 
     /* --- UTILS --- */
     .hidden { display: none !important; }
-    
-    #sync-toast { 
-      position: fixed; bottom: 30px; right: 30px; 
-      background: #1e293b; color: white; 
-      padding: 14px 24px; border-radius: var(--radius-md); 
-      display: flex; align-items: center; gap: 12px; 
-      transform: translateY(100px); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-      z-index: 2000; box-shadow: var(--shadow-float); font-weight: 500;
-    }
+    #sync-toast { position: fixed; bottom: 30px; right: 30px; background: #1e293b; color: white; padding: 14px 24px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px; transform: translateY(100px); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2000; box-shadow: var(--shadow-float); font-weight: 500; }
     #sync-toast.show { transform: translateY(0); }
-    
-    /* --- PACKING & OTHER STYLES (Keep Minimal) --- */
+
+    /* --- PACKING --- */
     .packing-layout { display: grid; grid-template-columns: 320px 1fr; gap: 24px; height: calc(100vh - 120px); }
     .pack-list-col { background: white; border-radius: var(--radius-lg); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
     .pack-list-header { padding: 16px; border-bottom: 1px solid var(--border); background: #f8fafc; font-weight: 600; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
@@ -594,9 +338,8 @@
     .pack-item-row { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: white; border: 1px solid var(--border); border-radius: var(--radius-md); transition: var(--transition); }
     .pack-item-row.completed { border-color: var(--status-paid-text); background: #f0fdf4; }
     .pack-ws-footer { padding: 20px 24px; background: white; border-top: 1px solid var(--border); text-align: right; }
-    @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
 
-    /* --- MODAL STYLES (Keep existing) --- */
+    /* --- MODALS --- */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); opacity: 0; animation: fadeIn 0.2s forwards; }
     @keyframes fadeIn { to { opacity: 1; } }
     .modal-content { width: 95%; max-width: 800px; padding: 0; overflow: hidden; border-radius: 16px; border: none; background: #ffffff !important; box-shadow: var(--shadow-float); transform: scale(0.95); animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
@@ -605,7 +348,7 @@
     .modal-body { padding: 32px; background: #ffffff; max-height: 70vh; overflow-y: auto; }
     .modal-footer { padding: 20px 32px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
 
-    /* Barcode specific (Existing) */
+    /* Barcode etc... (Skipping common parts for brevity) */
     .barcode-preview-box { border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; padding: 20px; text-align: center; margin-bottom: 20px; min-height: 160px; display: flex; align-items: center; justify-content: center; gap: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
     .barcode-image-container { flex-shrink: 0; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
     .barcode-image-container img { width: 100%; height: 100%; object-fit: cover; }
@@ -618,10 +361,10 @@
     .radio-pill:hover { background: #f8fafc; }
     .radio-pill.active { border-color: var(--primary); color: var(--primary); background: var(--primary-light); font-weight: 600; }
 
-    /* --- PRINT STYLES --- */
+    /* Print */
     @media print {
       @page { size: A4 portrait; margin: 0; }
-      body, html { margin: 0; padding: 0; background: white; width: 100%; height: auto !important; -webkit-print-color-adjust: exact; overflow: visible; }
+      body, html { margin: 0; padding: 0; background: white; width: 100%; height: auto !important; -webkit-print-color-adjust: exact; overflow: visible; position: static; }
       .sidebar, .btn, .page-title, .nav-item, #sync-toast, [id^="view-"], .modal-overlay, .bulk-action-bar, .dropdown { display: none !important; }
       #printable-area { display: block !important; width: 100%; position: static; }
       .print-page { page-break-after: always; position: relative; margin: 0; padding: 0; min-height: 297mm; }
@@ -638,14 +381,12 @@
     #printable-area { display: none; background: white; color: black; }
 
     /* ============================================================
-      MOBILE RESPONSIVE CSS (วางส่วนนี้เพิ่มเข้าไปล่างสุดของ Style)
-      ============================================================ */
+       MOBILE RESPONSIVE CSS (LOCK SCREEN LOGIC)
+       ============================================================ */
     @media (max-width: 900px) {
       /* 1. จัดโครงสร้างหลักใหม่ (Main Layout) */
       body {
         flex-direction: column; /* เปลี่ยนแนวเป็น บน-ล่าง */
-        height: 100vh;
-        overflow: hidden; /* ห้าม Scroll ที่ Body หลัก */
       }
 
       /* 2. เปลี่ยน Sidebar ด้านข้าง เป็น เมนูบาร์ด้านล่าง (Bottom Nav) */
@@ -684,10 +425,6 @@
       /* 3. ปรับพื้นที่เนื้อหา (Content) ให้ไม่โดนเมนูบัง */
       .main-content {
         padding: 16px 16px 90px 16px; /* เว้นด้านล่าง 90px ให้เมนู */
-        width: 100%;
-        height: 100%;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch; /* ให้เลื่อนลื่นๆ บน iOS */
       }
 
       /* 4. หน้า Dashboard (เรียง 2 แถว) */
@@ -698,10 +435,9 @@
       /* 5. หน้าสร้างออเดอร์ (Forms Stack) */
       #view-create form > div { grid-template-columns: 1fr !important; gap: 16px; }
       
-      /* ปรับรายการสินค้าตอนกรอก (Item List Row) ให้ดูง่ายขึ้น */
       .item-list-row {
         display: grid;
-        grid-template-columns: 1fr 1fr 40px; /* ชื่อสินค้า | ราคา+จำนวน | ปุ่มลบ */
+        grid-template-columns: 1fr 1fr 40px; 
         gap: 8px;
         background: #f8fafc;
         border: 1px solid #e2e8f0;
@@ -710,11 +446,10 @@
         margin-bottom: 8px;
       }
       .item-list-row .form-control { margin-bottom: 0; }
-      .item-list-row .item-name { grid-column: 1 / -1; width: 100%; } /* ชื่อสินค้าเต็มแถว */
-      .item-list-row .item-sku { display: none; } /* ซ่อน SKU ชั่วคราวเพื่อให้ไม่รก */
+      .item-list-row .item-name { grid-column: 1 / -1; width: 100%; } 
+      .item-list-row .item-sku { display: none; } 
       .item-list-row button { height: 100%; display: flex; align-items: center; justify-content: center; }
 
-      /* ซ่อน Header ตารางรายการสินค้า */
       #view-create .card h3 + div { display: none; }
 
       /* 6. หน้า Packing (Tab View) */
@@ -722,11 +457,7 @@
       .pack-list-col { height: 250px; margin-bottom: 16px; flex-shrink: 0; }
       .pack-workspace { height: 500px; min-height: 50vh; }
       
-      /* 7. ตารางข้อมูล (Table Scroll) */
-      .table-erp { display: block; overflow-x: auto; white-space: nowrap; }
-      .table-erp th, .table-erp td { padding: 12px 10px; font-size: 13px; }
-      
-      /* 8. Modal (Popup) */
+      /* 7. Modal (Popup) */
       .modal-content {
         width: 95% !important;
         max-height: 90vh;
@@ -826,18 +557,21 @@
           <!-- Top Products -->
           <div class="card">
               <h3><span class="material-icons-round" style="color: #f59e0b;">emoji_events</span> สินค้าขายดี (Top Products)</h3>
-              <table class="dash-table">
-                  <thead>
-                      <tr>
-                          <th>สินค้า</th>
-                          <th style="text-align: center;">จำนวน</th>
-                          <th>ยอดรวม</th>
-                      </tr>
-                  </thead>
-                  <tbody id="dash-top-products">
-                      <!-- Filled by JS -->
-                  </tbody>
-              </table>
+              <!-- 4.1 ตารางแบบเลื่อนได้ (Scrollable Table Container) -->
+              <div class="table-scroll-container">
+                  <table class="dash-table">
+                      <thead>
+                          <tr>
+                              <th>สินค้า</th>
+                              <th style="text-align: center;">จำนวน</th>
+                              <th>ยอดรวม</th>
+                          </tr>
+                      </thead>
+                      <tbody id="dash-top-products">
+                          <!-- Filled by JS -->
+                      </tbody>
+                  </table>
+              </div>
           </div>
 
           <!-- Payment & Recent -->
@@ -850,19 +584,21 @@
               </div>
               <div class="card" style="margin-bottom: 0; flex: 1;">
                   <h3><span class="material-icons-round" style="color: #8b5cf6;">schedule</span> ออเดอร์ล่าสุด</h3>
-                  <table class="dash-table">
-                      <thead>
-                          <tr>
-                              <th>ID</th>
-                              <th>ลูกค้า</th>
-                              <th style="text-align: center;">สถานะ</th>
-                              <th>ยอดเงิน</th>
-                          </tr>
-                      </thead>
-                      <tbody id="dash-recent-orders">
-                          <!-- Filled by JS -->
-                      </tbody>
-                  </table>
+                  <div class="table-scroll-container">
+                      <table class="dash-table">
+                          <thead>
+                              <tr>
+                                  <th>ID</th>
+                                  <th>ลูกค้า</th>
+                                  <th style="text-align: center;">สถานะ</th>
+                                  <th>ยอดเงิน</th>
+                              </tr>
+                          </thead>
+                          <tbody id="dash-recent-orders">
+                              <!-- Filled by JS -->
+                          </tbody>
+                      </table>
+                  </div>
               </div>
           </div>
       </div>
@@ -951,8 +687,8 @@
           </select>
         </div>
         
-        <!-- NEW ERP TABLE LAYOUT -->
-        <div style="overflow-x: auto;">
+        <!-- NEW ERP TABLE LAYOUT with SCROLL CONTAINER -->
+        <div class="table-scroll-container">
             <table class="table-erp">
             <thead>
                 <tr>
@@ -990,7 +726,7 @@
       </div>
       
       <div class="card" style="padding: 0; overflow: hidden; border: none; box-shadow: var(--shadow-sm);">
-        <div style="overflow-x: auto;">
+        <div class="table-scroll-container">
             <table class="table-erp">
               <thead>
                 <tr>
@@ -1156,7 +892,7 @@
         </div>
 
         <!-- Inventory Table -->
-        <div style="overflow-x: auto;">
+        <div class="table-scroll-container">
             <table class="table-erp">
               <thead>
                 <tr>
@@ -1189,7 +925,7 @@
       </div>
       
       <div class="card" style="padding: 0; overflow: hidden; border: none; box-shadow: var(--shadow-sm); min-height: 60vh;">
-        <div style="overflow-x: auto;">
+        <div class="table-scroll-container">
              <table class="table-erp">
               <thead>
                 <tr>
@@ -2576,6 +2312,8 @@
       
       // Return to idle state
       packingOrderId = null;
+      renderPacking();
+      renderDashboard(); // Update stats
       document.getElementById('pack-active-state').classList.add('hidden');
       document.getElementById('pack-idle-state').classList.remove('hidden');
 
